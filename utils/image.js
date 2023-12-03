@@ -2,12 +2,13 @@ const Canvas = require('canvas');
 const Path = require('path');
 
 const { listFiles } = require('./fs');
-const { fontsDir } = require('./dirs')
-const { loadConfig } = require('./config');
-const config = loadConfig();
+const { fontsDir } = require('./dirs');
 
-function fromText(text, width=config.video.width, height=config.video.height) {
-    const canvas = Canvas.createCanvas(width, height);
+function fromText(text, config) {
+    if(!config.height || !config.width){
+        throw new Error("`height` and `width` are required fields!")
+    }
+    const canvas = Canvas.createCanvas(config.width, config.height);
     const ttfFiles = listFiles(fontsDir).filter(f=>f.toLowerCase().endsWith('.ttf'));
     for(const ttfFile of ttfFiles){
         const family = Path.basename(ttfFile);
@@ -16,16 +17,16 @@ function fromText(text, width=config.video.width, height=config.video.height) {
     const context = canvas.getContext('2d');
 
     // Set background color
-    context.fillStyle = config.captions.background;
-    context.fillRect(0, 0, width, height);
+    context.fillStyle = config.background_color || 'rgba(0, 0, 0, 0)';
+    context.fillRect(0, 0, config.width, config.height);
 
     // Set text style
-    context.fillStyle = config.captions.color;
-    context.strokeStyle = config.captions.stroke_color;
-    context.lineWidth = config.captions.stroke_width;
+    context.fillStyle = config.text_color || 'white';
+    context.strokeStyle = config.text_stroke_color || 'black';
+    context.lineWidth = config.text_stroke_width || 5;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.font = `${config.captions.font_size}px "${config.captions.font}"`;
+    context.font = `${config.text_size || 50}px "${config.text_font || 'Roboto-Regular'}"`;
 
     // Word wrapping
     const words = text.split(' ');
@@ -38,7 +39,7 @@ function fromText(text, width=config.video.width, height=config.video.height) {
         maxHeight = Math.max(maxHeight, metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)
         let testWidth = metrics.width;
 
-        if (testWidth > (width - (2 * config.captions.line_padding.width))) {
+        if (testWidth > (config.width - (2 * (config.line_padding_width || 200)))) {
             lines.push(currentLine);
             currentLine = words[i];
         } else {
@@ -48,13 +49,13 @@ function fromText(text, width=config.video.width, height=config.video.height) {
     lines.push(currentLine);
 
     // Drawing text
-    const lineHeight = maxHeight + config.captions.line_padding.height; // Adjust line height as needed
-    const startingY = height / 2 - (lines.length * lineHeight) / 2;
+    const lineHeight = maxHeight + (config.line_padding_height || 10); // Adjust line height as needed
+    const startingY = config.height / 2 - (lines.length * lineHeight) / 2;
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        context.strokeText(line, width / 2, startingY + i * lineHeight);
-        context.fillText(line, width / 2, startingY + i * lineHeight);
+        context.strokeText(line, config.width / 2, startingY + i * lineHeight);
+        context.fillText(line, config.width / 2, startingY + i * lineHeight);
     }
 
     // Save or process the canvas

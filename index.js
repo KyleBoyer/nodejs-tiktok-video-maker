@@ -120,7 +120,11 @@ async function main() {
             story = await reddit.getPostInfo(config.story.source.post_id);
         } else if(config.story.source.random){
             story = await reddit.getRandom(config.story.source.random_subreddits);
+            global.ProgressBar.terminate();
+            console.log(`🎲 Random story title: ${story.title}`)
+            console.log(`🎲 Random story link: https://reddit.com/r/${story.folder}/comments/${story.id}`)
         } else {
+            global.ProgressBar.terminate();
             console.error("If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.");
             process.exit(1);
         }
@@ -132,8 +136,20 @@ async function main() {
     }
     story.content = await replacer.replace(story.content, config.replacements['text-and-audio']);
     story.title = await replacer.replace(story.title, config.replacements['text-and-audio']);
-    const splits = await splitter.split(story.content.replace('\n', ' '));
+    const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
     const pb = global.ProgressBar.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
+    const imageFromTextConfig = {
+        height: config.video.height,
+        width: config.video.width,
+        background_color: config.captions.background,
+        text_color: config.captions.color,
+        text_stroke_color: config.captions.stroke_color,
+        text_stroke_width: config.captions.stroke_width,
+        text_size: config.captions.font_size,
+        text_font: config.captions.font,
+        line_padding_width: config.captions.line_padding.width,
+        line_padding_height: config.captions.line_padding.height,
+    };
     const generateCaptionAndAudio = async (text) => {
         const hash = crypto.createHash('md5').update(text).digest("hex");
         const imageFile = Path.join(captionsDir, `${hash}.png`);
@@ -146,7 +162,7 @@ async function main() {
         const ttsFileAlreadyExists = fs.existsSync(ttsFile);
         const imagePromiseFn = imageAlreadyExists ?
             () => Promise.resolve() :
-            () => image.fromText(replacedText.split('\n').join(' '));
+            () => image.fromText(replacedText.split('\n').join(' '), imageFromTextConfig);
         const ttsPromiseFn = ttsFileAlreadyExists ?
             () => Promise.resolve() :
             () => tts.generate(replacedAudio);
@@ -240,7 +256,7 @@ async function main() {
         if(config.video.accurate_render_method){
             const silenceImageFile = Path.join(ttsDir, 'blank.png');
             if(!fs.existsSync(silenceImageFile)){
-                fs.writeFileSync(silenceImageFile, await image.fromText(' '));
+                fs.writeFileSync(silenceImageFile, await image.fromText(' ', imageFromTextConfig));
             }
             if(!fs.existsSync(silenceVideoFile)){
                 await runWithoutProgress(
@@ -300,14 +316,16 @@ async function main() {
             });
         }
     }
-    global.ProgressBar.terminate();
     const allDurations = videoParts.map(p=>p.ttsDuration+config.tts.extra_silence);
     const calculatedTTSDuration = allDurations.reduce((partialSum, a) => partialSum + a, 0);
+    // global.ProgressBar.terminate();
     // console.log('Calculated duration from parts:',calculatedTTSDuration);
     const actualTTSDuration = await getDuration(config.video.accurate_render_method ? finalTTSVideoFile : finalTTSFile, true, true, "⏳ Calculating accurate TTS duration...");
     const totalDurationSeconds = config.video.accurate_render_method ? actualTTSDuration : Math.max(calculatedTTSDuration, actualTTSDuration);
+    // global.ProgressBar.terminate();
     // console.log('Actual duration from file:', actualTTSDuration);
     const ttsDurationCorrection = config.video.accurate_render_method ? 0 : ((actualTTSDuration - calculatedTTSDuration) / videoParts.length);
+    global.ProgressBar.terminate();
     console.log(`🎥 Video will be ${prettyMilliseconds(totalDurationSeconds * 1000, {verbose: true})} long!`)
     const useVideoFileDuration = await getDuration(useVideoFile);
     if(totalDurationSeconds > useVideoFileDuration){
@@ -328,6 +346,7 @@ async function main() {
             useVideoFile = videoLoopedFile;
             
         }else{
+            global.ProgressBar.terminate();
             console.error('Background video is too short. Please enable looping or choose a different video.')
             process.exit(1);
         }
@@ -349,6 +368,7 @@ async function main() {
             }
             useAudioFile = audioLoopedFile;
         }else{
+            global.ProgressBar.terminate();
             console.error('Background audio is too short. Please enable looping or choose a different audio.')
             process.exit(1);
         }
@@ -501,6 +521,7 @@ async function main() {
     if(config.cleanup.captions){
         fs.rmSync(captionsDir, { recursive: true, force: true });
     }
+    global.ProgressBar.terminate();
     console.log(`Video has been output to: ${finalVideoFile}`)
 }
 

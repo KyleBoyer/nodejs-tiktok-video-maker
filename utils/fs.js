@@ -21,7 +21,7 @@ const listFiles = (dirName) => {
 
 const generateValidFilename = (text, maxLength=256) => {
     const validChars = /[^a-zA-Z0-9-_]/g;
-    return text.replace(validChars, '_').replace(/_{2,}/,'_').substring(0, maxLength);
+    return text.replace(validChars, '_').replace(/_{2,}/g,'_').substring(0, maxLength);
 }
 exports = module.exports = {
     ensureDir,

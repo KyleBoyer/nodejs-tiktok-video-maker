@@ -15,6 +15,7 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `node index.js`
 
 ### TODO
+ - fs.existsSync checks should also check file length
  - Confirm fonts are working properly with image rendering
  - Config use `oneOf` to validate tts voice is valid
  - All AI functions
