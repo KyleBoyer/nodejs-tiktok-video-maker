@@ -1,6 +1,17 @@
 const fs = require('fs');
 const yup = require('yup');
 
+const { voices } = require('./tts');
+
+const isString = str => typeof str === 'string' || str instanceof String;
+const flattenVoices = (voices) => {
+    const flattenMore = v=> isString(v) ? v : flattenVoices(v);
+    if(Array.isArray(voices)){
+        return voices.flat().map(flattenMore).flat();
+    }
+    return Object.values(voices).flat().map(flattenMore).flat();
+}
+
 const textReplacementSchema = yup.array().of(yup.string().required()).min(2).max(2).required();
 
 const audioSchema = yup.object({
@@ -60,7 +71,17 @@ const configSchema = yup.object({
         name: yup.string().oneOf(['tiktok']).default('tiktok'), // TODO support more TTS services
         speed: yup.number().min(0.5).max(100).default(1),
         volume: yup.number().min(0).max(1).default(1),
-        voice: yup.string().default('en_male_narration').optional(),
+        voice: yup.string().default('en_male_narration').when('name', (name, s) => {
+            const ttsSpecificVoices = voices[name];
+            let newS = s;
+            if(ttsSpecificVoices.length){
+                newS = newS.oneOf(flattenVoices(ttsSpecificVoices));
+            }
+            if(ttsSpecificVoices.length == 1){
+                newS = newS.default(ttsSpecificVoices[0]);
+            }
+            return newS;
+        }),
         demux_concat: yup.boolean().default(true),
         tiktok_session_id: yup.string().when('tts', { is: 'tiktok', then: s => s.required(), otherwise: s=>s.optional()}),
         extra_silence: yup.number().min(0).default(0.3),

@@ -3,7 +3,9 @@ global.ProgressBar = new MultiProgress();
 const fs = require('fs');
 const crypto = require('crypto');
 const Path = require('path');
-const exponential = require('exponential-backoff');
+const exponential = 
+    { backOff: func => func() };
+    // require('exponential-backoff');
 const backoffSettings = {
     jitter: 'full',
     startingDelay: 1000,
@@ -11,16 +13,20 @@ const backoffSettings = {
 }
 
 const youtube = require('./utils/youtube');
-const reddit = require('./utils/reddit');
-const ai = require('./utils/ai');
-const tts = require('./utils/tts');
+const RedditUtil = require('./utils/reddit');
+const AIUtil = require('./utils/ai');
+const { TTSUtil } = require('./utils/tts');
 const splitter = require('./utils/splitter');
 const replacer = require('./utils/replacer');
-const image = require('./utils/image');
+const ImageGenerator = require('./utils/image');
 const { generateValidFilename } = require('./utils/fs')
 
 const { loadConfig } = require('./utils/config');
 const config = loadConfig();
+const image = new ImageGenerator(config);
+const reddit = new RedditUtil(config);
+const tts = new TTSUtil(config);
+const ai = new AIUtil(config);
 
 const { youtubeDir, captionsDir, ttsDir, outputDir } = require('./utils/dirs');
 const { runWithoutProgress, runWithProgress, getDuration, ffmpeg, concatFiles } = require('./utils/ffmpeg');
@@ -138,18 +144,6 @@ async function main() {
     story.title = await replacer.replace(story.title, config.replacements['text-and-audio']);
     const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
     const pb = global.ProgressBar.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
-    const imageFromTextConfig = {
-        height: config.video.height,
-        width: config.video.width,
-        background_color: config.captions.background,
-        text_color: config.captions.color,
-        text_stroke_color: config.captions.stroke_color,
-        text_stroke_width: config.captions.stroke_width,
-        text_size: config.captions.font_size,
-        text_font: config.captions.font,
-        line_padding_width: config.captions.line_padding.width,
-        line_padding_height: config.captions.line_padding.height,
-    };
     const generateCaptionAndAudio = async (text) => {
         const hash = crypto.createHash('md5').update(text).digest("hex");
         const imageFile = Path.join(captionsDir, `${hash}.png`);
@@ -162,7 +156,7 @@ async function main() {
         const ttsFileAlreadyExists = fs.existsSync(ttsFile);
         const imagePromiseFn = imageAlreadyExists ?
             () => Promise.resolve() :
-            () => image.fromText(replacedText.split('\n').join(' '), imageFromTextConfig);
+            () => image.fromText(replacedText.split('\n').join(' '));
         const ttsPromiseFn = ttsFileAlreadyExists ?
             () => Promise.resolve() :
             () => tts.generate(replacedAudio);
@@ -256,7 +250,7 @@ async function main() {
         if(config.video.accurate_render_method){
             const silenceImageFile = Path.join(ttsDir, 'blank.png');
             if(!fs.existsSync(silenceImageFile)){
-                fs.writeFileSync(silenceImageFile, await image.fromText(' ', imageFromTextConfig));
+                fs.writeFileSync(silenceImageFile, await image.fromText(' '));
             }
             if(!fs.existsSync(silenceVideoFile)){
                 await runWithoutProgress(

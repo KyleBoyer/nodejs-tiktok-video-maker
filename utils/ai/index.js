@@ -1,11 +1,17 @@
-const openai = require('./openai');
-async function rewordStory(originalStory){
-    return openai.rewordStory(originalStory);;
+const OpenAIUtil = require('./openai');
+
+class AIUtil {
+    constructor(config){
+        this.config = config;
+        this.openai = new OpenAIUtil(config);
+    }
+
+    async rewordStory(originalStory){
+        return this.openai.rewordStory(originalStory);
+    }
+    async generateNewStory(){
+        return this.openai.generateNewStory();
+    }
 }
-async function generateNewStory(prompt){
-    return openai.generateNewStory(prompt);
-}
-exports = module.exports = {
-    generateNewStory,
-    rewordStory,
-}
+
+exports = module.exports = AIUtil;

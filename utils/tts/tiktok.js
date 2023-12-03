@@ -1,13 +1,82 @@
 const fs = require('fs');
-const os = require('os');
 const Path = require('path');
 const crypto = require('crypto');
 const axios = require('axios');
 
-const { loadConfig } = require('../config');
 const { ttsDir } = require('../dirs');
 const { concatFiles } = require('../ffmpeg');
-const config = loadConfig();
+
+async function callAPI(text, sessionId, voice='en_male_narration'){
+    try {
+        const response = await axios.post('https://tiktok-tts.weilnet.workers.dev/api/generation', { text, voice }, {
+            headers: {
+                "User-Agent": "com.zhiliaoapp.musically/2022600030 (Linux; U; Android 7.1.2; es_ES; SM-G988N; Build/NRD90M;tt-ok/3.12.13.1)",
+                "Cookie": `sessionid=${sessionId}`,
+                "Content-Type": "application/json"
+            }
+        });
+        if(response.data.error){
+            throw new Error(response.data.error);
+        }
+        if(!response.data.data){
+            throw new Error("Invalid response when generating Tiktok voice!");
+        }
+        return Buffer.from(response.data.data, 'base64');
+    }catch(err){
+        throw new Error(
+            err?.response?.data?.error ||
+            err?.response?.data ||
+            err?.message ||
+            err
+        );
+    }
+}
+
+class TikTokTTS {
+    constructor(config){
+        this.config = config;
+    }
+    async generate(text){
+        const hash = crypto.createHash('md5').update(text).digest("hex");
+        const words = text.split(/\s/);
+        const textParts = [];
+        let currentPart = words[0];
+        for(let i = 1; i < words.length; i++){
+            let testPart = currentPart + ' ' + words[i];
+            if(testPart.length > 300){
+                textParts.push(currentPart);
+                currentPart = words[i];
+            } else {
+                currentPart = testPart;
+            }
+        }
+        textParts.push(currentPart);
+        const combineParts = [];
+        let i = 1;
+        for(const part of textParts){
+            const partFile = Path.join(ttsDir, `${hash}-part-${i}.mp3`)
+            const partAudio = await callAPI(part, this.config.tts.tiktok_session_id, this.config.tts.voice);
+            fs.writeFileSync(partFile, partAudio);
+            combineParts.push(partFile);
+            i++;
+        }
+        const combinedFile = Path.join(ttsDir, `${hash}-combined.mp3`);
+    
+        await concatFiles({
+            files: combineParts,
+            output: combinedFile,
+            audio_bitrate: this.config.audio.bitrate,
+            demuxer: this.config.tts.demux_concat,
+            progress: false,
+        });
+        for(const combinePart of combineParts){
+            fs.unlinkSync(combinePart);
+        }
+        const retBuffer = fs.readFileSync(combinedFile);
+        fs.unlinkSync(combinedFile);
+        return retBuffer;
+    }
+}
 
 const disneyVoices = [
     "en_us_ghostface",  // Ghost Face
@@ -73,75 +142,12 @@ const vocals = [
     "en_female_ht_f08_wonderful_world" // Dramatic
 ];
 
-const DEFAULT_VOICE=config.tts.voice || 'en_male_narration';
-
-async function callAPI(text, voice=DEFAULT_VOICE){
-    try {
-        const response = await axios.post('https://tiktok-tts.weilnet.workers.dev/api/generation', { text, voice }, {
-            headers: {
-                "User-Agent": "com.zhiliaoapp.musically/2022600030 (Linux; U; Android 7.1.2; es_ES; SM-G988N; Build/NRD90M;tt-ok/3.12.13.1)",
-                "Cookie": `sessionid=${config.tts.tiktok_session_id}`,
-                "Content-Type": "application/json"
-            }
-        });
-        if(response.data.error){
-            throw new Error(response.data.error);
-        }
-        if(!response.data.data){
-            throw new Error("Invalid response when generating Tiktok voice!");
-        }
-        return Buffer.from(response.data.data, 'base64');
-    }catch(err){
-        throw new Error(
-            err?.response?.data?.error ||
-            err?.response?.data ||
-            err?.message ||
-            err
-        );
-    }
-}
-
-async function generate(text, voice=DEFAULT_VOICE){
-    const hash = crypto.createHash('md5').update(text).digest("hex");
-    const words = text.split(/\s/);
-    const textParts = [];
-    let currentPart = words[0];
-    for(let i = 1; i < words.length; i++){
-        let testPart = currentPart + ' ' + words[i];
-        if(testPart.length > 300){
-            textParts.push(currentPart);
-            currentPart = words[i];
-        } else {
-            currentPart = testPart;
-        }
-    }
-    textParts.push(currentPart);
-    const combineParts = [];
-    let i = 1;
-    for(const part of textParts){
-        const partFile = Path.join(ttsDir, `${hash}-part-${i}.mp3`)
-        const partAudio = await callAPI(part, voice);
-        fs.writeFileSync(partFile, partAudio);
-        combineParts.push(partFile);
-        i++;
-    }
-    const combinedFile = Path.join(ttsDir, `${hash}-combined.mp3`);
-
-    await concatFiles({
-        files: combineParts,
-        output: combinedFile,
-        audio_bitrate: config.audio.bitrate,
-        demuxer: config.tts.demux_concat,
-        progress: false,
-    });
-    for(const combinePart of combineParts){
-        fs.unlinkSync(combinePart);
-    }
-    const retBuffer = fs.readFileSync(combinedFile);
-    fs.unlinkSync(combinedFile);
-    return retBuffer;
-}
-
 exports = module.exports = {
-    generate
-}
+    TikTokTTS,
+    voices: {
+        disneyVoices,
+        engVoices,
+        nonEngVoices,
+        vocals,
+    }
+};

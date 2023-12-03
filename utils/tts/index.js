@@ -1,9 +1,18 @@
-const tiktok = require('./tiktok')
+const { TikTokTTS, voices: TikTokTTSVoices } = require('./tiktok')
 
-async function generate(text){
-    return tiktok.generate(text);
+class TTSUtil {
+    constructor(config){
+        this.config = config;
+        this.tiktok = new TikTokTTS(config);
+    }
+    async generate(text){
+        return this.tiktok.generate(text);
+    }
 }
 
 exports = module.exports = {
-    generate
+    TTSUtil,
+    voices: {
+        tiktok: TikTokTTSVoices
+    }
 }
