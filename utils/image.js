@@ -11,12 +11,12 @@ class ImageGenerator {
     fromText(text) {
         const width = this.config.video.width;
         const height = this.config.video.height;
-        const canvas = Canvas.createCanvas(width, height);
         const ttfFiles = listFiles(fontsDir).filter(f=>f.toLowerCase().endsWith('.ttf'));
         for(const ttfFile of ttfFiles){
-            const family = Path.basename(ttfFile);
+            const family = Path.parse(ttfFile).name;
             Canvas.registerFont(ttfFile, { family });
         }
+        const canvas = Canvas.createCanvas(width, height);
         const context = canvas.getContext('2d');
     
         // Set background color

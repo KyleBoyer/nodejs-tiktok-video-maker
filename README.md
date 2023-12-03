@@ -15,7 +15,6 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `node index.js`
 
 ### TODO
- - Confirm fonts are working properly with image rendering
  - All AI functions
  - Screenshot Reddit Title function
  - More TTS voice options
