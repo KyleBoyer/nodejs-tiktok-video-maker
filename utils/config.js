@@ -110,6 +110,9 @@ const configSchema = yup.object({
 });
 
 function loadConfig(fileName=`${process.cwd()}/config.json`){
+    if(!fs.existsSync(fileName)){
+        throw new Error(`"${process.cwd()}/config.json" does not exist!`)
+    }
     const fileContents = fs.readFileSync(fileName);
     const parsed = JSON.parse(fileContents);
     const config = validateConfig(parsed);
