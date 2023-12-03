@@ -98,7 +98,7 @@ const configSchema = yup.object({
                 .when(['name', 'random'], { is: (name, random) => name == 'reddit' && random, then: s => s.required(), otherwise: s => s.optional()}),
             random_allow_nsfw: yup.boolean().default(false)
                 .when(['name', 'random'], { is: (name, random) => name == 'reddit' && random, then: s => s.required(), otherwise: s => s.optional()}),
-        }).test('refresh_token or (username and password)', '`refresh_token` OR (`username` AND `password`) is required', v => {
+        }).test('story.source.refresh_token or (story.source.username and story.source.password)', 'story.source.refresh_token OR (story.source.username AND story.source.password) is required', v => {
             return v.name == 'reddit' && (v.refresh_token || (v.username && v.password))
         })
     }),
@@ -111,16 +111,35 @@ const configSchema = yup.object({
 
 function loadConfig(fileName=`${process.cwd()}/config.json`){
     if(!fs.existsSync(fileName)){
-        throw new Error(`"${process.cwd()}/config.json" does not exist!`)
+        console.error(`"${process.cwd()}/config.json" does not exist!`)
+        process.exit(1);
     }
     const fileContents = fs.readFileSync(fileName);
-    const parsed = JSON.parse(fileContents);
-    const config = validateConfig(parsed);
+    let parsed;
+    try {
+        parsed = JSON.parse(fileContents);
+    } catch (_err){
+        console.error(`"${process.cwd()}/config.json" is not valid JSON!`);
+        process.exit(1);
+    }
+    let config;
+    try {
+        config = validateConfig(parsed);
+    } catch (err) {
+        if(Array.isArray(err.errors) && err.errors.length > 0){
+            console.error(`"${process.cwd()}/config.json" had the following configuration issues:\n${err.errors.join('\n')}`);
+            process.exit(1);
+        }
+        throw err;
+    }
     return config;
 }
 
 function validateConfig(configObj){
-    const config = configSchema.validateSync(configObj)
+    const config = configSchema.validateSync(configObj, {
+        abortEarly: false,
+        stripUnknown: true
+    })
     return config;
 }
 
