@@ -6,3 +6,9 @@
  - Config use `oneOf` to validate tts voice is valid
  - All AI functions
  - Screenshot Reddit Title function
+ - More TTS voice options
+
+
+# Nice to have
+ - Translate story
+ - Caption effects
