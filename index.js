@@ -121,7 +121,8 @@ async function main() {
         } else if(config.story.source.random){
             story = await reddit.getRandom(config.story.source.random_subreddits);
         } else {
-            throw new Error("If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.");
+            console.error("If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.");
+            process.exit(1);
         }
     } else if (config.story.source.name == 'ai'){
         story = await ai.generateNewStory(config.story.source.prompt);
@@ -327,7 +328,8 @@ async function main() {
             useVideoFile = videoLoopedFile;
             
         }else{
-            throw new Error('Background video is too short. Please enable looping or choose a different video.')
+            console.error('Background video is too short. Please enable looping or choose a different video.')
+            process.exit(1);
         }
     }
     const useAudioFileDuration = await getDuration(useAudioFile);
@@ -347,18 +349,17 @@ async function main() {
             }
             useAudioFile = audioLoopedFile;
         }else{
-            throw new Error('Background audio is too short. Please enable looping or choose a different audio.')
+            console.error('Background audio is too short. Please enable looping or choose a different audio.')
+            process.exit(1);
         }
     }
     let start = null;
-    if(config.video.keep_end && config.video.keep_beginning){
-        throw new Error("We cannot keep both the beginning and the end of the background video. Please choose one, or disable both for a random section.")
-    } else if (config.video.keep_beginning){
+    if (config.video.video_trim_method == 'keep_start'){
         start = 0;
-    } else if (config.video.keep_end){
+    } else if (config.video.video_trim_method == 'keep_end'){
         const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, "⏳ Calculating accurate background video duration...");
         start = accurateUseVideoFileDuration - totalDurationSeconds;
-    }else{
+    }else{ // random
         const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, "⏳ Calculating accurate background video duration...");
         const precision = 1000000;
         const extraVideoDuration = Math.floor((accurateUseVideoFileDuration - totalDurationSeconds)*precision);

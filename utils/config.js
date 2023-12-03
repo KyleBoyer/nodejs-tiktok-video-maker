@@ -37,8 +37,7 @@ const configSchema = yup.object({
         crop_style_height: yup.string().oneOf(['top', 'center', 'bottom']).default('center'),
         scale_pad: yup.boolean().default(true),
         scale_pad_color: yup.string().default('black'),
-        keep_end: yup.boolean().default(false),
-        keep_beginning: yup.boolean().default(false),
+        video_trim_method: yup.string().oneOf(['keep_start', 'keep_end', 'random']).default('random'),
         url: yup.string().required(),
         loop: yup.boolean().default(true),
         height: yup.number().min(1).default(1920),
@@ -71,6 +70,11 @@ const configSchema = yup.object({
             name: yup.string().required().oneOf(['reddit', 'ai']),
             // AI Specific
             ai_type: yup.string().oneOf(['openai']).default('openai').when('name', { is: 'ai', then: s => s.required(), otherwise: s => s.optional()}), // TODO support different AI types
+            openai_api_key: yup.string().when(['name', 'ai_type', 'ai_rewrite'], {
+                is: (name, ai_type, ai_rewrite) => ai_type == 'openai' && (name == 'ai' || ai_rewrite),
+                then: s => s.required(),
+                otherwise: s => s.optional()
+            }),
             prompt: yup.string().when('name', { is: 'ai', then: s => s.required(), otherwise: s => s.optional()}),
             generated_min_length: yup.number().default(500).when('name', { is: 'ai', then: s => s.required(), otherwise: s => s.optional()}),
             // Reddit Specific
@@ -99,7 +103,9 @@ const configSchema = yup.object({
             random_allow_nsfw: yup.boolean().default(false)
                 .when(['name', 'random'], { is: (name, random) => name == 'reddit' && random, then: s => s.required(), otherwise: s => s.optional()}),
         }).test('story.source.refresh_token or (story.source.username and story.source.password)', 'story.source.refresh_token OR (story.source.username AND story.source.password) is required', v => {
-            return v.name == 'reddit' && (v.refresh_token || (v.username && v.password))
+            return !v.name || v.name != 'reddit' || (v.refresh_token || (v.username && v.password))
+        }).test('story.source.post_id OR story.source.random', 'story.source.post_id OR story.source.random is required', v => {
+            return !v.name || v.name != 'reddit' || (v.post_id || v.random)
         })
     }),
     replacements: yup.object({
