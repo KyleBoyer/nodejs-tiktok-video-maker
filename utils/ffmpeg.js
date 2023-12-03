@@ -85,12 +85,12 @@ async function getDuration(file, accurate=false, withProgress=false, progressLab
 
 async function concatFiles(options){
     const files = options.files;
-    if(options.files.length <= 0){
-        throw new Error("A file list is required!");
+    if(!Array.isArray(files) || files.length <= 0){
+        throw new Error("An input file list is required!");
     }
     const outFile = options.output;
     if(!outFile){
-        throw new Error("An output is required!")
+        throw new Error("An output file is required!")
     }
     if(files.length == 1){
         fs.copyFileSync(files[0], outFile);
