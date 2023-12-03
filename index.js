@@ -117,9 +117,9 @@ async function main() {
     let story = {};
     if(config.story.source.name == 'reddit'){
         if(config.story.source.post_id){
-            story = await reddit.getPostInfo(config.story.source.post_id);
+            story = await reddit.getPostInfo(config.story.source.post_id, config.story);
         } else if(config.story.source.random){
-            story = await reddit.getRandom(config.story.source.random_subreddits);
+            story = await reddit.getRandom(config.story.source.random_subreddits, config.story);
             global.ProgressBar.terminate();
             console.log(`🎲 Random story title: ${story.title}`)
             console.log(`🎲 Random story link: https://reddit.com/r/${story.folder}/comments/${story.id}`)

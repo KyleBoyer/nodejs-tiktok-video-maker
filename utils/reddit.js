@@ -5,17 +5,6 @@ const crypto = require('crypto');
 const snoowrap = require('snoowrap');
 const { markdownToTxt: removeMarkdown } = require('markdown-to-txt');
 
-const { loadConfig } = require('./config');
-const config = loadConfig();
-const r = new snoowrap({
-    userAgent: config.story.source.userAgent || 'RedditVideoMaker-node',
-    clientId: config.story.source.client_id,
-    clientSecret: config.story.source.client_secret,
-    refreshToken: config.story.source.refresh_token,
-    username: config.story.source.username,
-    password: config.story.source.password,
-});
-
 const { redditDir } = require('./dirs');
 const trackingFile = Path.join(redditDir, 'tracking.json');
 const trackingObj = fs.existsSync(trackingFile) ? JSON.parse(fs.readFileSync(trackingFile).toString()) : {};
@@ -44,13 +33,21 @@ function fixStory(story){
     }
 }
 
-async function getRandom(subreddits = [undefined]){
+async function getRandom(subreddits, config){
+    const r = new snoowrap({
+        userAgent: config.source.userAgent || 'RedditVideoMaker-node',
+        clientId: config.source.client_id,
+        clientSecret: config.source.client_secret,
+        refreshToken: config.source.refresh_token,
+        username: config.source.username,
+        password: config.source.password,
+    });
     const allHotItems = [];
     for(const time of ['hour', 'day', 'week', 'month', 'year', 'all']){
         for(const subreddit of subreddits){
             const subredditHotItems = await r.getTop(subreddit, {
                 time,
-                limit: config.story.source.random_limit || 50
+                limit: config.source.random_limit || 50
             });
             const filteredHotItems = subredditHotItems.filter(s => {
                 const noMarkdownSelfText = removeMarkdown(s.selftext);
@@ -59,10 +56,10 @@ async function getRandom(subreddits = [undefined]){
                     !isComplete(s.id) &&
                     !s.stickied &&
                     !s.is_video &&
-                    s.num_comments >= (config.story.source.random_min_comments || 0) &&
-                    (!s.over_18 || config.story.source.random_allow_nsfw) &&
-                    noMarkdownSelfText.length >= (config.story.source.random_min_length || 0) &&
-                    noMarkdownSelfText.length <= (config.story.source.random_max_length || Number.MAX_SAFE_INTEGER)
+                    s.num_comments >= (config.source.random_min_comments || 0) &&
+                    (!s.over_18 || config.source.random_allow_nsfw) &&
+                    noMarkdownSelfText.length >= (config.source.random_min_length || 0) &&
+                    noMarkdownSelfText.length <= (config.source.random_max_length || Number.MAX_SAFE_INTEGER)
                 );
             })
             allHotItems.push(...filteredHotItems);
@@ -77,12 +74,20 @@ async function getRandom(subreddits = [undefined]){
             })
         }
     }
-    // This error most likely occurs only when you have posted all the top config.story.source.random_limit or 50 from all time options
+    // This error most likely occurs only when you have posted all the top config.source.random_limit or 50 from all time options
     // This could also occur if the subreddit is empty or doesnt have any valid posts
     throw new Error("Unable to get a random story... Please try increasing the config `random_limit`.");
 }
 
-async function getPostInfo(submissionID){
+async function getPostInfo(submissionID, config){
+    const r = new snoowrap({
+        userAgent: config.source.userAgent || 'RedditVideoMaker-node',
+        clientId: config.source.client_id,
+        clientSecret: config.source.client_secret,
+        refreshToken: config.source.refresh_token,
+        username: config.source.username,
+        password: config.source.password,
+    });
     const result = await r.getSubmission(submissionID);
     const [ id, content, title, folder ] = await Promise.all([
         result.id,
