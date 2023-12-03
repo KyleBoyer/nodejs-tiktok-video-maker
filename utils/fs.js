@@ -23,9 +23,14 @@ const generateValidFilename = (text, maxLength=256) => {
     const validChars = /[^a-zA-Z0-9-_]/g;
     return text.replace(validChars, '_').replace(/_{2,}/g,'_').substring(0, maxLength);
 }
+
+const existsAndHasContent = (file) => {
+    return fs.existsSync(file) && fs.statSync(file).size > 0;
+}
 exports = module.exports = {
     ensureDir,
     ensureDirs,
     listFiles,
     generateValidFilename,
+    existsAndHasContent,
 }

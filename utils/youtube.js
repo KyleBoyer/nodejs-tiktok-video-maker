@@ -1,14 +1,15 @@
 const Path = require('path');
-const os = require('os');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
+
+const { existsAndHasContent } = require('./fs');
 const { ffmpeg, runWithProgress } = require('./ffmpeg');
 
 async function download(url, toDir){
     const urlInfo = await ytdl.getInfo(url);
     const urlID = urlInfo.videoDetails.videoId;
     const urlFile = Path.join(toDir, `${urlID}.mp4`);
-    if(fs.existsSync(urlFile)){
+    if(existsAndHasContent(urlFile)){
         return urlFile;
     }
     const audioDownloadStream = ytdl(url, { quality: 'highestaudio' });

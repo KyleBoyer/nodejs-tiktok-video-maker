@@ -5,9 +5,10 @@ const crypto = require('crypto');
 const snoowrap = require('snoowrap');
 const { markdownToTxt: removeMarkdown } = require('markdown-to-txt');
 
+const { existsAndHasContent } = require('./fs');
 const { redditDir } = require('./dirs');
 const trackingFile = Path.join(redditDir, 'tracking.json');
-const trackingObj = fs.existsSync(trackingFile) ? JSON.parse(fs.readFileSync(trackingFile).toString()) : {};
+const trackingObj = existsAndHasContent(trackingFile) ? JSON.parse(fs.readFileSync(trackingFile).toString()) : {};
 
 function fixStory(story){
     const newContent = removeMarkdown(story.content.split('&#x200B;').join('').trim()).trim();
@@ -17,6 +18,9 @@ function fixStory(story){
         content: newContent,
         folder: story.folder,
     }
+}
+function isComplete(postId){
+    return Object.keys(trackingObj).includes('done') && trackingObj['done'].includes(postId);
 }
 
 class RedditUtil {
@@ -40,10 +44,8 @@ class RedditUtil {
             fs.writeFileSync(trackingFile, JSON.stringify(trackingObj));
         }
     }
-    static isComplete(postId){
-        return Object.keys(trackingObj).includes('done') && trackingObj['done'].includes(postId);
-    }
-    async getRandom(subreddits = [undefined]){
+    async getRandom(){
+        const subreddits = config.story.source.random_subreddits;
         const allHotItems = [];
         for(const time of ['hour', 'day', 'week', 'month', 'year', 'all']){
             for(const subreddit of subreddits){

@@ -15,9 +15,7 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `node index.js`
 
 ### TODO
- - fs.existsSync checks should also check file length
  - Confirm fonts are working properly with image rendering
- - Config use `oneOf` to validate tts voice is valid
  - All AI functions
  - Screenshot Reddit Title function
  - More TTS voice options
@@ -31,8 +29,6 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Typescript
  - Translate story
  - Caption effects
- - Reduce `/utils/*` files dependency on config.js
-   - Pass in config from parent calling function
  - Better passing of the global.ProgressBar
  - Web UI
  - Config file builder / helper (might be pointless if the web UI does this)

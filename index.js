@@ -19,7 +19,7 @@ const { TTSUtil } = require('./utils/tts');
 const splitter = require('./utils/splitter');
 const replacer = require('./utils/replacer');
 const ImageGenerator = require('./utils/image');
-const { generateValidFilename } = require('./utils/fs')
+const { generateValidFilename, existsAndHasContent } = require('./utils/fs')
 
 const { loadConfig } = require('./utils/config');
 const config = loadConfig();
@@ -64,7 +64,7 @@ async function main() {
             ...(config.video.volume != 1 ? [`volume-${config.video.volume}`] : []),
         ].join('-');
         const videoSpeedVolumeChangedFile = `${useVideoFile.split('.').slice(0, -1).join('.')}-${filenameExtras}.${useVideoFile.split('.').pop()}`;
-        if(!fs.existsSync(videoSpeedVolumeChangedFile)){
+        if(!existsAndHasContent(videoSpeedVolumeChangedFile)){
             const whatGotUpdated = [
                 ...(config.video.speed != 1 ? [`speed`] : []),
                 ...(config.video.volume != 1 ? [`volume`] : []),
@@ -79,7 +79,7 @@ async function main() {
     }
     const audioFile = await exponential.backOff(() => youtube.download(config.audio.url, youtubeDir), backoffSettings);
     const audioOnlyFile = `${audioFile.split('.').slice(0, -1).join('.')}.mp3`;
-    if(!fs.existsSync(audioOnlyFile)){
+    if(!existsAndHasContent(audioOnlyFile)){
         await runWithProgress(
             ffmpeg()
                 .input(audioFile)
@@ -96,7 +96,7 @@ async function main() {
             ...(config.audio.volume != 1 ? [`volume-${config.audio.volume}`] : []),
         ].join('-');
         const audioSpeedVolumeChangedFile = `${useAudioFile.split('.').slice(0, -1).join('.')}-${filenameExtras}.${useAudioFile.split('.').pop()}`;
-        if(!fs.existsSync(audioSpeedVolumeChangedFile)){
+        if(!existsAndHasContent(audioSpeedVolumeChangedFile)){
             const whatGotUpdated = [
                 ...(config.audio.speed != 1 ? [`speed`] : []),
                 ...(config.audio.volume != 1 ? [`volume`] : []),
@@ -123,9 +123,9 @@ async function main() {
     let story = {};
     if(config.story.source.name == 'reddit'){
         if(config.story.source.post_id){
-            story = await reddit.getPostInfo(config.story.source.post_id, config.story);
+            story = await reddit.getPostInfo(config.story.source.post_id);
         } else if(config.story.source.random){
-            story = await reddit.getRandom(config.story.source.random_subreddits, config.story);
+            story = await reddit.getRandom();
             global.ProgressBar.terminate();
             console.log(`🎲 Random story title: ${story.title}`)
             console.log(`🎲 Random story link: https://reddit.com/r/${story.folder}/comments/${story.id}`)
@@ -152,8 +152,8 @@ async function main() {
             replacer.replace(text, config.replacements['text-only']),
             replacer.replace(text, config.replacements['audio-only'])
         ]);
-        const imageAlreadyExists = fs.existsSync(imageFile);
-        const ttsFileAlreadyExists = fs.existsSync(ttsFile);
+        const imageAlreadyExists = existsAndHasContent(imageFile);
+        const ttsFileAlreadyExists = existsAndHasContent(ttsFile);
         const imagePromiseFn = imageAlreadyExists ?
             () => Promise.resolve() :
             () => image.fromText(replacedText.split('\n').join(' '));
@@ -177,7 +177,7 @@ async function main() {
                 ...(config.tts.volume != 1 ? [`volume-${config.tts.volume}`] : []),
             ].join('-');
             const ttsSpeedVolumeChangedFile = `${audioFile.split('.').slice(0, -1).join('.')}-${filenameExtras}.${audioFile.split('.').pop()}`;
-            if(!fs.existsSync(ttsSpeedVolumeChangedFile)){
+            if(!existsAndHasContent(ttsSpeedVolumeChangedFile)){
                 await runWithoutProgress(
                     ffmpeg()
                         .input(audioFile)
@@ -199,7 +199,7 @@ async function main() {
         }
         if(config.video.accurate_render_method){
             const ttsVideoFile = `${audioFile.split('.').slice(0, -1).join('.')}.webm`;
-            if(!fs.existsSync(ttsVideoFile)){
+            if(!existsAndHasContent(ttsVideoFile)){
                 await runWithoutProgress(
                     ffmpeg()
                         .input(audioFile)
@@ -225,7 +225,7 @@ async function main() {
     const silenceAudioFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}.mp3`);
     const silenceVideoFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}.webm`);
     if(config.tts.extra_silence > 0){
-        if(!fs.existsSync(silenceAudioFile)){
+        if(!existsAndHasContent(silenceAudioFile)){
             await runWithoutProgress(
                 ffmpeg()
                     .input(videoParts[0].audioFile)
@@ -249,10 +249,10 @@ async function main() {
         }
         if(config.video.accurate_render_method){
             const silenceImageFile = Path.join(ttsDir, 'blank.png');
-            if(!fs.existsSync(silenceImageFile)){
+            if(!existsAndHasContent(silenceImageFile)){
                 fs.writeFileSync(silenceImageFile, await image.fromText(' '));
             }
-            if(!fs.existsSync(silenceVideoFile)){
+            if(!existsAndHasContent(silenceVideoFile)){
                 await runWithoutProgress(
                     ffmpeg()
                         .input(silenceAudioFile)
@@ -279,7 +279,7 @@ async function main() {
         const concatStr = useConcatParts.join('|');
         const hash = crypto.createHash('md5').update(concatStr).digest("hex");
         finalTTSVideoFile = Path.join(ttsDir, `${hash}.webm`);
-        if(!fs.existsSync(finalTTSVideoFile)){
+        if(!existsAndHasContent(finalTTSVideoFile)){
             await concatFiles({
                 files: useConcatParts,
                 output: finalTTSVideoFile,
@@ -299,7 +299,7 @@ async function main() {
         const concatStr = useConcatParts.join('|');
         const hash = crypto.createHash('md5').update(concatStr).digest("hex");
         finalTTSFile = Path.join(ttsDir, `${hash}.mp3`);
-        if(!fs.existsSync(finalTTSFile)){
+        if(!existsAndHasContent(finalTTSFile)){
             await concatFiles({
                 files: useConcatParts,
                 output: finalTTSFile,
@@ -326,7 +326,7 @@ async function main() {
         if(config.video.loop){
             const numVideoLoops = Math.ceil(totalDurationSeconds / useVideoFileDuration);
             const videoLoopedFile = `${useVideoFile.split('.').slice(0, -1).join('.')}-looped-${numVideoLoops}.${useVideoFile.split('.').pop()}`;
-            if(!fs.existsSync(videoLoopedFile)){
+            if(!existsAndHasContent(videoLoopedFile)){
                 await runWithProgress(
                     ffmpeg()
                         .input(useVideoFile)
@@ -350,7 +350,7 @@ async function main() {
         if(config.audio.loop){
             const numAudioLoops = Math.ceil(totalDurationSeconds / useAudioFileDuration);
             const audioLoopedFile = `${useAudioFile.split('.').slice(0, -1).join('.')}-looped-${numAudioLoops}.${useAudioFile.split('.').pop()}`;
-            if(!fs.existsSync(audioLoopedFile)){
+            if(!existsAndHasContent(audioLoopedFile)){
                 await runWithProgress(
                     ffmpeg()
                         .input(useAudioFile)
@@ -504,7 +504,7 @@ async function main() {
     )
     global.ProgressBar.terminate();
     if(config.story.source.name == 'reddit'){
-        reddit.markComplete(story.id);
+        RedditUtil.markComplete(story.id);
     }
     if(config.cleanup.youtube){
         fs.rmSync(youtubeDir, { recursive: true, force: true });
