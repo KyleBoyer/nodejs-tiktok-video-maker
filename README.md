@@ -12,3 +12,7 @@
 # Nice to have
  - Translate story
  - Caption effects
+ - Reduce `/utils/*` files depedency on config.js
+   - Pass in config from parent calling function
+ - Better passing of the global.ProgressBar
+ - Web UI
