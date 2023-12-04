@@ -4,8 +4,8 @@ const fs = require('fs');
 const crypto = require('crypto');
 const Path = require('path');
 const exponential = 
-    { backOff: func => func() };
-    // require('exponential-backoff');
+    // { backOff: func => func() };
+    require('exponential-backoff');
 const backoffSettings = {
     jitter: 'full',
     startingDelay: 1000,
