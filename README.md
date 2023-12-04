@@ -8,7 +8,8 @@ I was inspired to created this after briefly using https://github.com/elebumm/Re
 I noticed some bugs and features that I wanted to add, and did contribute these back. However, due to the variety of changes and features, I decided to start writing my own script. Thus, this utility was born.
 
 ## How to run
- - Install `ffmpeg`
+ - Install `ffmpeg` and `ffprobe`
+ - WINDOWS USERS: [Must set two environment variables, click here for more info](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg#:~:text=at%20the%20moment.-,Windows%20users,-%3A%20most%20probably%20ffmpeg)
  - Install dependencies with `npm install`
  - Create a config.json in the same directory you will be running this script from.
    - Config file must include the required fields, if you create the config.json with `{}`, and run the main script, it will error out and inform you of which fields are missing or incorrect.
@@ -19,7 +20,6 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Screenshot Reddit Title function
  - More TTS voice options
  - Review CONFIG.md and improve it
- - Check for windows support, or force them to use Docker if it can't work
 
 
 ### Nice to have
