@@ -1,19 +1,20 @@
 const os = require('os');
 const fs = require('fs');
+const tmp = require('tmp');
 const ffmpeg = require('fluent-ffmpeg');
 
 function runAutoProgress(ffmpegCmd, MultiProgressBar, label='🎥 Rendering...', appearAfter=1500){
     let bar;
     let preBarProgress = 0;
-    // const bar = MultiProgressBar.newDefaultBarWithLabel(label);
     return new Promise((resolve, reject) => {
         let cmd;
         let barStartTimer = setTimeout(() => {
-            bar = MultiProgressBar.newDefaultBarWithLabel(label)
+            bar = MultiProgressBar.newDefaultBarWithLabel(label);
+            bar.update(preBarProgress);
         }, appearAfter)
         ffmpegCmd
             .outputOptions([`-threads ${os.cpus().length}`, '-y'])
-            .on('progress', function(progress) {
+            .on('progress', (progress) => {
                 const progressDecimal = progress.percent / 100;
                 if(bar){
                     bar.update(progressDecimal);
@@ -42,23 +43,23 @@ function runAutoProgress(ffmpegCmd, MultiProgressBar, label='🎥 Rendering...',
 
 async function getDuration(file, MultiProgressBar, accurate=false, progressLabel='⏳ Calculating duration...', appearAfter=1500){ // Accurate=true takes much longer
     if(accurate){
-        // ffmpegCmd = ffmpeg.input(filename).output('/dev/null', f="null", progress='/dev/stdout')
         let bar;
         let preBarProgress = 0;
-        // const bar = withProgress ? MultiProgressBar.newDefaultBarWithLabel(progressLabel) : null;
         const decodeResult = await new Promise((resolve, reject) => {
+            const progressFile = tmp.fileSync().name;
             let barStartTimer = setTimeout(() => {
                 bar = MultiProgressBar.newDefaultBarWithLabel(progressLabel);
+                bar.update(preBarProgress);
             }, appearAfter)
             ffmpeg({ stdoutLines: 0 })
                 .input(file)
-                .outputOptions(['-f null', '-progress /dev/stdout', `-threads ${os.cpus().length}`])
+                .outputOptions(['-f null', `-progress ${progressFile}`, `-threads ${os.cpus().length}`])
                 .output(`/dev/null`)
                 .on('error', (err) => {
                     clearTimeout(barStartTimer);
                     reject(err);
                 })
-                .on('progress', function(progress) {
+                .on('progress', (progress) => {
                     const progressDecimal = progress.percent / 100;
                     if(bar){
                         bar.update(progressDecimal);
@@ -66,14 +67,15 @@ async function getDuration(file, MultiProgressBar, accurate=false, progressLabel
                         preBarProgress = progressDecimal;
                     }
                 })
-                .on('end', function(stdout) {
+                .on('end', () => {
                     clearTimeout(barStartTimer);
                     if(bar){
                         bar.update(100);
                     }
-                    const stdoutLines = stdout.split('\n').filter(l=>l.includes('out_time_ms'));
-                    if(stdoutLines.length){
-                        const lastOutMS = stdoutLines.pop();
+                    const progressLines = fs.readFileSync(progressFile).toString().split('\n').filter(l=>l.includes('out_time_ms'))
+                    fs.unlinkSync(progressFile);
+                    if(progressLines.length){
+                        const lastOutMS = progressLines.pop();
                         const ms = +lastOutMS.split('=').pop().trim()
                         resolve(ms / 1000000);
                     }else{
@@ -87,7 +89,7 @@ async function getDuration(file, MultiProgressBar, accurate=false, progressLabel
         }
     }
     const probeData = await new Promise((resolve, reject) =>
-        ffmpeg.ffprobe(file, function(err, metadata) {
+        ffmpeg.ffprobe(file, (err, metadata) => {
             if(err){
                 reject(err);
             }else{

@@ -400,10 +400,10 @@ async function main() {
     if (config.audio.tim_method == 'keep_start'){
         audioStart = 0;
     } else if (config.audio.tim_method == 'keep_end'){
-        const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
+        const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, "⏳ Calculating accurate background audio duration...");
         audioStart = accurateUseAudioFileDuration - totalDurationSeconds;
     }else{ // random
-        const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
+        const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, "⏳ Calculating accurate background audio duration...");
         const precision = 1000000;
         const extraAudioDuration = Math.floor((accurateUseAudioFileDuration - totalDurationSeconds)*precision);
         audioStart = crypto.randomInt(0, extraAudioDuration+1) / precision; // +1 because the ending is exclusive
