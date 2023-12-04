@@ -19,6 +19,7 @@ const audioSchema = yup.object({
     volume: yup.number().min(0).max(1).default(0.15),
     url: yup.string().required(),
     loop: yup.boolean().default(true),
+    tim_method: yup.string().oneOf(['keep_start', 'keep_end', 'random']).default('keep_start'),
 });
 
 const configSchema = yup.object({
@@ -48,7 +49,7 @@ const configSchema = yup.object({
         crop_style_height: yup.string().oneOf(['top', 'center', 'bottom']).default('center'),
         scale_pad: yup.boolean().default(true),
         scale_pad_color: yup.string().default('black'),
-        video_trim_method: yup.string().oneOf(['keep_start', 'keep_end', 'random']).default('random'),
+        tim_method: yup.string().oneOf(['keep_start', 'keep_end', 'random']).default('random'),
         url: yup.string().required(),
         loop: yup.boolean().default(true),
         height: yup.number().min(1).default(1920),

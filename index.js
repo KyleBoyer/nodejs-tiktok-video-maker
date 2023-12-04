@@ -384,17 +384,29 @@ async function main() {
             process.exit(1);
         }
     }
-    let start = null;
-    if (config.video.video_trim_method == 'keep_start'){
-        start = 0;
-    } else if (config.video.video_trim_method == 'keep_end'){
+    let videoStart = null;
+    if (config.video.tim_method == 'keep_start'){
+        videoStart = 0;
+    } else if (config.video.tim_method == 'keep_end'){
         const accurateUseVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
-        start = accurateUseVideoFileDuration - totalDurationSeconds;
+        videoStart = accurateUseVideoFileDuration - totalDurationSeconds;
     }else{ // random
         const accurateUseVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
         const precision = 1000000;
         const extraVideoDuration = Math.floor((accurateUseVideoFileDuration - totalDurationSeconds)*precision);
-        start = crypto.randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
+        videoStart = crypto.randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
+    }
+    let audioStart = null;
+    if (config.audio.tim_method == 'keep_start'){
+        audioStart = 0;
+    } else if (config.audio.tim_method == 'keep_end'){
+        const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
+        audioStart = accurateUseAudioFileDuration - totalDurationSeconds;
+    }else{ // random
+        const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
+        const precision = 1000000;
+        const extraAudioDuration = Math.floor((accurateUseAudioFileDuration - totalDurationSeconds)*precision);
+        audioStart = crypto.randomInt(0, extraAudioDuration+1) / precision; // +1 because the ending is exclusive
     }
     const finalVideoExtension = '.' + config.video.output_format;
     const finalVideoFile = Path.join(outputDir, generateValidFilename(story.title, 256 - finalVideoExtension.length) + finalVideoExtension);
@@ -451,11 +463,11 @@ async function main() {
     if(config.video.accurate_render_method){
         finalVideoCmd = finalVideoCmd.inputOptions(['-vcodec libvpx-vp9']);
     }
-    finalVideoCmd = finalVideoCmd.input(useVideoFile).seekInput(start) // 1
+    finalVideoCmd = finalVideoCmd.input(useVideoFile).seekInput(videoStart) // 1
     // if(config.video.accurate_render_method){
     //     finalVideoCmd = finalVideoCmd.inputOptions(['-vcodec libvpx-vp9']);
     // }
-    finalVideoCmd=finalVideoCmd.input(useAudioFile) // 2
+    finalVideoCmd=finalVideoCmd.input(useAudioFile).seekInput(audioStart) // 2
     if(config.video.accurate_render_method){
         finalVideoCmd = finalVideoCmd.inputOptions(['-vcodec libvpx-vp9']);
     }
