@@ -88,7 +88,7 @@ export class RedditUtil {
       }
     }
     // This error most likely occurs only when you have posted all the top config.story.source.random_limit or 50 from all time options
-    // This could also occur if the subreddit is empty or doesnt have any valid posts
+    // This could also occur if the subreddit is empty or doesn't have any valid posts
     throw new Error('Unable to get a random story... Please try increasing the config `random_limit`.');
   }
 

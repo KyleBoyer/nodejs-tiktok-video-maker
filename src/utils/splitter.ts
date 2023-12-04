@@ -4,7 +4,7 @@ const wink = winkNLP(model);
 import natural from 'natural';
 import compromise from 'compromise';
 
-// TODO: possibly support a hacked together version of `spacy` (python)
+// TODO: possibly support a hacked together version of `spaCy` (python)
 export async function split(text: string, useNLP='compromise') {
   if (useNLP == 'natural') {
     const tokenizer = new natural.SentenceTokenizer();
