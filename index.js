@@ -1,5 +1,5 @@
 const MultiProgress = require('./utils/multi-progress');
-global.ProgressBar = new MultiProgress();
+const sharedMultiProgress = new MultiProgress();
 const fs = require('fs');
 const crypto = require('crypto');
 const Path = require('path');
@@ -34,7 +34,7 @@ const prettyMsPromise = import('pretty-ms');
 
 async function main() {
     const { default: prettyMilliseconds } = await prettyMsPromise;
-    const videoFile = await exponential.backOff(() => youtube.download(config.video.url, youtubeDir), backoffSettings);
+    const videoFile = await exponential.backOff(() => youtube.download(config.video.url, youtubeDir, sharedMultiProgress), backoffSettings);
     let useVideoFile = videoFile;
     if(config.video.speed != 1 || config.video.volume != 1){
         let ffmpegCmd = ffmpeg()
@@ -72,12 +72,13 @@ async function main() {
             await runWithProgress(
                 ffmpegCmd
                     .output(videoSpeedVolumeChangedFile),
-                    `🎥 Rendering ${whatGotUpdated} updated background video...`
+                sharedMultiProgress,
+                `🎥 Rendering ${whatGotUpdated} updated background video...`
             )
         }
         useVideoFile = videoSpeedVolumeChangedFile;
     }
-    const audioFile = await exponential.backOff(() => youtube.download(config.audio.url, youtubeDir), backoffSettings);
+    const audioFile = await exponential.backOff(() => youtube.download(config.audio.url, youtubeDir, sharedMultiProgress), backoffSettings);
     const audioOnlyFile = `${audioFile.split('.').slice(0, -1).join('.')}.mp3`;
     if(!existsAndHasContent(audioOnlyFile)){
         await runWithProgress(
@@ -86,7 +87,8 @@ async function main() {
                 .withNoVideo()
                 // .withAudioCodec('copy')
                 .output(audioOnlyFile),
-                '🎵 Extracting audio from video...'
+            sharedMultiProgress,
+            '🎵 Extracting audio from video...'
         )
     }
     let useAudioFile = audioOnlyFile;
@@ -115,7 +117,8 @@ async function main() {
                         }] : []),
                     ])
                     .output(audioSpeedVolumeChangedFile),
-                    `🎵 Rendering ${whatGotUpdated} updated background audio...`
+                sharedMultiProgress,
+                `🎵 Rendering ${whatGotUpdated} updated background audio...`
             )
         }
         useAudioFile = audioSpeedVolumeChangedFile;
@@ -126,11 +129,11 @@ async function main() {
             story = await reddit.getPostInfo(config.story.source.post_id);
         } else if(config.story.source.random){
             story = await reddit.getRandom();
-            global.ProgressBar.terminate();
+            sharedMultiProgress.terminate();
             console.log(`🎲 Random story title: ${story.title}`)
             console.log(`🎲 Random story link: https://reddit.com/r/${story.folder}/comments/${story.id}`)
         } else {
-            global.ProgressBar.terminate();
+            sharedMultiProgress.terminate();
             console.error("If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.");
             process.exit(1);
         }
@@ -143,7 +146,7 @@ async function main() {
     story.content = await replacer.replace(story.content, config.replacements['text-and-audio']);
     story.title = await replacer.replace(story.title, config.replacements['text-and-audio']);
     const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
-    const pb = global.ProgressBar.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
+    const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
     const generateCaptionAndAudio = async (text) => {
         const hash = crypto.createHash('md5').update(text).digest("hex");
         const imageFile = Path.join(captionsDir, `${hash}.png`);
@@ -287,6 +290,7 @@ async function main() {
                 video_bitrate: config.video.bitrate,
                 demuxer: config.tts.demux_concat,
                 progress: true,
+                MultiProgressBar: sharedMultiProgress,
                 progressLabel: '🎵 Rendering combined TTS...'
             });
         }
@@ -306,20 +310,21 @@ async function main() {
                 audio_bitrate: config.audio.bitrate,
                 demuxer: config.tts.demux_concat,
                 progress: true,
+                MultiProgressBar: sharedMultiProgress,
                 progressLabel: '🎵 Rendering combined TTS audio...'
             });
         }
     }
     const allDurations = videoParts.map(p=>p.ttsDuration+config.tts.extra_silence);
     const calculatedTTSDuration = allDurations.reduce((partialSum, a) => partialSum + a, 0);
-    // global.ProgressBar.terminate();
+    // sharedMultiProgress.terminate();
     // console.log('Calculated duration from parts:',calculatedTTSDuration);
-    const actualTTSDuration = await getDuration(config.video.accurate_render_method ? finalTTSVideoFile : finalTTSFile, true, true, "⏳ Calculating accurate TTS duration...");
+    const actualTTSDuration = await getDuration(config.video.accurate_render_method ? finalTTSVideoFile : finalTTSFile, true, true, sharedMultiProgress, "⏳ Calculating accurate TTS duration...");
     const totalDurationSeconds = config.video.accurate_render_method ? actualTTSDuration : Math.max(calculatedTTSDuration, actualTTSDuration);
-    // global.ProgressBar.terminate();
+    // sharedMultiProgress.terminate();
     // console.log('Actual duration from file:', actualTTSDuration);
     const ttsDurationCorrection = config.video.accurate_render_method ? 0 : ((actualTTSDuration - calculatedTTSDuration) / videoParts.length);
-    global.ProgressBar.terminate();
+    sharedMultiProgress.terminate();
     console.log(`🎥 Video will be ${prettyMilliseconds(totalDurationSeconds * 1000, {verbose: true})} long!`)
     const useVideoFileDuration = await getDuration(useVideoFile);
     if(totalDurationSeconds > useVideoFileDuration){
@@ -334,13 +339,14 @@ async function main() {
                         .withVideoCodec('copy')
                         .withAudioCodec('copy')
                         .output(videoLoopedFile),
+                    sharedMultiProgress,
                     "🎥 Rendering looped background video..."
                 )
             }
             useVideoFile = videoLoopedFile;
             
         }else{
-            global.ProgressBar.terminate();
+            sharedMultiProgress.terminate();
             console.error('Background video is too short. Please enable looping or choose a different video.')
             process.exit(1);
         }
@@ -357,12 +363,13 @@ async function main() {
                         .inputOptions([`-stream_loop ${numAudioLoops}`])
                         .withAudioCodec('copy')
                         .output(audioLoopedFile),
+                    sharedMultiProgress,
                     "🎵 Rendering looped background audio..."
                 )
             }
             useAudioFile = audioLoopedFile;
         }else{
-            global.ProgressBar.terminate();
+            sharedMultiProgress.terminate();
             console.error('Background audio is too short. Please enable looping or choose a different audio.')
             process.exit(1);
         }
@@ -371,10 +378,10 @@ async function main() {
     if (config.video.video_trim_method == 'keep_start'){
         start = 0;
     } else if (config.video.video_trim_method == 'keep_end'){
-        const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, "⏳ Calculating accurate background video duration...");
+        const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, sharedMultiProgress, "⏳ Calculating accurate background video duration...");
         start = accurateUseVideoFileDuration - totalDurationSeconds;
     }else{ // random
-        const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, "⏳ Calculating accurate background video duration...");
+        const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, sharedMultiProgress, "⏳ Calculating accurate background video duration...");
         const precision = 1000000;
         const extraVideoDuration = Math.floor((accurateUseVideoFileDuration - totalDurationSeconds)*precision);
         start = crypto.randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
@@ -498,11 +505,11 @@ async function main() {
             .complexFilter([...finalVideoFilters, ...overlayFilters], 'tmp')
             .withAudioBitrate(`${config.audio.bitrate}k`)
             .withVideoBitrate(config.video.bitrate) // k is automatically appended here
-            .output(finalVideoFile)
-        ,
+            .output(finalVideoFile),
+        sharedMultiProgress,
         "🎥 Rendering final video..."
     )
-    global.ProgressBar.terminate();
+    sharedMultiProgress.terminate();
     if(config.story.source.name == 'reddit'){
         RedditUtil.markComplete(story.id);
     }
@@ -515,7 +522,7 @@ async function main() {
     if(config.cleanup.captions){
         fs.rmSync(captionsDir, { recursive: true, force: true });
     }
-    global.ProgressBar.terminate();
+    sharedMultiProgress.terminate();
     console.log(`Video has been output to: ${finalVideoFile}`)
 }
 

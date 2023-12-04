@@ -28,6 +28,5 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Typescript
  - Translate story
  - Caption effects
- - Better passing of the global.ProgressBar
  - Web UI
  - Config file builder / helper (might be pointless if the web UI does this)

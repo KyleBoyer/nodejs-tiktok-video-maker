@@ -2,8 +2,8 @@ const os = require('os');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 
-function runWithProgress(ffmpegCmd, label='🎥 Rendering...'){
-    const bar = global.ProgressBar.newDefaultBarWithLabel(label);
+function runWithProgress(ffmpegCmd, MultiProgressBar, label='🎥 Rendering...'){
+    const bar = MultiProgressBar.newDefaultBarWithLabel(label);
     return new Promise((resolve, reject) => {
         let cmd;
         ffmpegCmd
@@ -37,10 +37,10 @@ function runWithoutProgress(ffmpegCmd){
     })
 }
 
-async function getDuration(file, accurate=false, withProgress=false, progressLabel='⏳ Calcuating duration...'){ // Accurate=true takes much longer
+async function getDuration(file, accurate=false, withProgress=false, MultiProgressBar = undefined, progressLabel='⏳ Calcuating duration...'){ // Accurate=true takes much longer
     if(accurate){
         // ffmpegCmd = ffmpeg.input(filename).output('/dev/null', f="null", progress='/dev/stdout')
-        const bar = withProgress ? global.ProgressBar.newDefaultBarWithLabel(progressLabel) : null;
+        const bar = withProgress ? MultiProgressBar.newDefaultBarWithLabel(progressLabel) : null;
         const decodeResult = await new Promise((resolve, reject) =>
             ffmpeg({ stdoutLines: 0 })
                 .input(file)
@@ -99,9 +99,10 @@ async function concatFiles(options){
     const audio_bitrate = options.audio_bitrate;
     const video_bitrate = options.video_bitrate;
     const progress = options.progress ?? false;
+    const MultiProgressBar = options.MultiProgressBar;
     const progressLabel = options.progressLabel;
     const demuxer = options.demuxer ?? true;
-    const runCmd = progress ? (cmd) => runWithProgress(cmd, progressLabel) : (cmd) => runWithoutProgress(cmd);
+    const runCmd = progress ? (cmd) => runWithProgress(cmd, MultiProgressBar, progressLabel) : (cmd) => runWithoutProgress(cmd);
     if(demuxer){
         const fileListingFile = `${outFile}.txt`;
         fs.writeFileSync(fileListingFile, files.map(f=>`file '${f}'\n`).join(''));

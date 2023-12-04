@@ -5,7 +5,7 @@ const ytdl = require('ytdl-core');
 const { existsAndHasContent } = require('./fs');
 const { ffmpeg, runWithProgress } = require('./ffmpeg');
 
-async function download(url, toDir){
+async function download(url, toDir, MultiProgressBar = undefined){
     const urlInfo = await ytdl.getInfo(url);
     const urlID = urlInfo.videoDetails.videoId;
     const urlFile = Path.join(toDir, `${urlID}.mp4`);
@@ -20,18 +20,22 @@ async function download(url, toDir){
     //     audio: { downloaded: 0, total: 0},
     //     video: { downloaded: 0, total: 0},
     // };
-    const audioBar = global.ProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube audio...');
-    const videoBar = global.ProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube video...');
-    audioDownloadStream.on('progress', (_, downloaded, total) => {
-        audioBar.update(downloaded / total);
-    });
+    if(MultiProgressBar){
+        const audioBar = MultiProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube audio...');
+        audioDownloadStream.on('progress', (_, downloaded, total) => {
+            audioBar.update(downloaded / total);
+        });
+    }
     const videoDownloadStream = ytdl(url, { quality: 'highestvideo' });
     const pipeVideoStream = videoDownloadStream.pipe(
         fs.createWriteStream(`${urlFile}.video.tmp`)
     );
-    videoDownloadStream.on('progress', (_, downloaded, total) => {
-        videoBar.update(downloaded / total);
-    });
+    if(MultiProgressBar){
+        const videoBar = MultiProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube video...');
+        videoDownloadStream.on('progress', (_, downloaded, total) => {
+            videoBar.update(downloaded / total);
+        });
+    }
     const audioPromise = new Promise((resolve, reject) => {
         pipeAudioStream.on('finish', resolve);
         pipeAudioStream.on('error', reject);
@@ -49,7 +53,8 @@ async function download(url, toDir){
             .withVideoCodec('copy')
             .withOutputOptions(['-map 0:v', '-map 1:a'])
             .output(urlFile),
-            '🎥 Rendering Youtube video...'
+        MultiProgressBar,
+        '🎥 Rendering Youtube video...'
     );
     fs.unlinkSync(`${urlFile}.video.tmp`);
     fs.unlinkSync(`${urlFile}.audio.tmp`);
