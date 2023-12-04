@@ -69,7 +69,7 @@ const configSchema = yup.object({
         }),
     }),
     tts: yup.object({
-        name: yup.string().oneOf(['tiktok']).default('tiktok'), // TODO support more TTS services
+        name: yup.string().oneOf(['google-translate', 'tiktok']).default('google-translate'), // TODO support more TTS services
         speed: yup.number().min(0.5).max(100).default(1),
         volume: yup.number().min(0).max(1).default(1),
         voice: yup.string().default('en_male_narration').when('name', (name, s) => {
