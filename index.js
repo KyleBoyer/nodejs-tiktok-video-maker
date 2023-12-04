@@ -29,7 +29,7 @@ const tts = new TTSUtil(config);
 const ai = new AIUtil(config);
 
 const { youtubeDir, captionsDir, ttsDir, outputDir } = require('./utils/dirs');
-const { runWithoutProgress, runWithProgress, getDuration, ffmpeg, concatFiles } = require('./utils/ffmpeg');
+const { runAutoProgress, getDuration, ffmpeg, concatFiles } = require('./utils/ffmpeg');
 const prettyMsPromise = import('pretty-ms');
 
 async function main() {
@@ -69,7 +69,7 @@ async function main() {
                 ...(config.video.speed != 1 ? [`speed`] : []),
                 ...(config.video.volume != 1 ? [`volume`] : []),
             ].join('/');
-            await runWithProgress(
+            await runAutoProgress(
                 ffmpegCmd
                     .output(videoSpeedVolumeChangedFile),
                 sharedMultiProgress,
@@ -81,7 +81,7 @@ async function main() {
     const audioFile = await exponential.backOff(() => youtube.download(config.audio.url, youtubeDir, sharedMultiProgress), backoffSettings);
     const audioOnlyFile = `${audioFile.split('.').slice(0, -1).join('.')}.mp3`;
     if(!existsAndHasContent(audioOnlyFile)){
-        await runWithProgress(
+        await runAutoProgress(
             ffmpeg()
                 .input(audioFile)
                 .withNoVideo()
@@ -103,7 +103,7 @@ async function main() {
                 ...(config.audio.speed != 1 ? [`speed`] : []),
                 ...(config.audio.volume != 1 ? [`volume`] : []),
             ].join('/');
-            await runWithProgress(
+            await runAutoProgress(
                 ffmpeg()
                     .input(useAudioFile)
                     .audioFilters([
@@ -181,7 +181,7 @@ async function main() {
             ].join('-');
             const ttsSpeedVolumeChangedFile = `${audioFile.split('.').slice(0, -1).join('.')}-${filenameExtras}.${audioFile.split('.').pop()}`;
             if(!existsAndHasContent(ttsSpeedVolumeChangedFile)){
-                await runWithoutProgress(
+                await runAutoProgress(
                     ffmpeg()
                         .input(audioFile)
                         .audioFilters([
@@ -195,7 +195,9 @@ async function main() {
                             }] : []),
                         ])
                         .withNoVideo()
-                        .output(ttsSpeedVolumeChangedFile)
+                        .output(ttsSpeedVolumeChangedFile),
+                    sharedMultiProgress,
+                    "🎵 Rendering speed/volume updated TTS section..."
                 )
             }
             audioFile = ttsSpeedVolumeChangedFile;
@@ -203,15 +205,17 @@ async function main() {
         if(config.video.accurate_render_method){
             const ttsVideoFile = `${audioFile.split('.').slice(0, -1).join('.')}.webm`;
             if(!existsAndHasContent(ttsVideoFile)){
-                await runWithoutProgress(
+                await runAutoProgress(
                     ffmpeg()
                         .input(audioFile)
                         .input(imageFile)
                         .outputOptions(['-pix_fmt yuva420p'])
-                        .output(ttsVideoFile)
+                        .output(ttsVideoFile),
+                    sharedMultiProgress,
+                    "🎵 Rendering TTS section..."
                 );
             }
-            const ttsDuration = Math.ceil(await getDuration(ttsVideoFile, true) * 100) / 100;
+            const ttsDuration = Math.ceil(await getDuration(ttsVideoFile, sharedMultiProgress, true) * 100) / 100;
             return {
                 imageFile,
                 audioFile,
@@ -219,7 +223,7 @@ async function main() {
                 videoFile: ttsVideoFile
             };
         } else {
-            const ttsDuration = Math.ceil(await getDuration(audioFile, true) * 100) / 100;
+            const ttsDuration = Math.ceil(await getDuration(audioFile, sharedMultiProgress, true) * 100) / 100;
             return { imageFile, audioFile, ttsDuration };
         }
     }
@@ -229,7 +233,7 @@ async function main() {
     const silenceVideoFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}.webm`);
     if(config.tts.extra_silence > 0){
         if(!existsAndHasContent(silenceAudioFile)){
-            await runWithoutProgress(
+            await runAutoProgress(
                 ffmpeg()
                     .input(videoParts[0].audioFile)
                     .inputOptions([`-stream_loop ${Math.ceil(config.tts.extra_silence / videoParts[0].ttsDuration)}`])
@@ -239,15 +243,19 @@ async function main() {
                         filter: 'volume',
                         options: '0'
                     })
-                    .output(silenceAudioFile)
+                    .output(silenceAudioFile),
+                sharedMultiProgress,
+                "🎵 Rendering extra silence audio..."
             )
-            // await runWithoutProgress(
+            // await runAutoProgress(
             //     ffmpeg()
             //         .input('anullsrc')
             //         .inputOptions(['-f lavfi'])
             //         .withDuration(config.tts.extra_silence)
             //         .withAudioBitrate(`${config.audio.bitrate}k`)
-            //         .output(silenceAudioFile)
+            //         .output(silenceAudioFile),
+            //     sharedMultiProgress,
+            //     "🎵 Rendering extra silence audio..."
             // )
         }
         if(config.video.accurate_render_method){
@@ -256,12 +264,14 @@ async function main() {
                 fs.writeFileSync(silenceImageFile, await image.fromText(' '));
             }
             if(!existsAndHasContent(silenceVideoFile)){
-                await runWithoutProgress(
+                await runAutoProgress(
                     ffmpeg()
                         .input(silenceAudioFile)
                         .input(silenceImageFile)
                         .outputOptions(['-pix_fmt yuva420p'])
-                        .output(silenceVideoFile)
+                        .output(silenceVideoFile),
+                    sharedMultiProgress,
+                    "🎵 Rendering extra silence video..."
                 )
             }
         }
@@ -319,20 +329,20 @@ async function main() {
     const calculatedTTSDuration = allDurations.reduce((partialSum, a) => partialSum + a, 0);
     // sharedMultiProgress.terminate();
     // console.log('Calculated duration from parts:',calculatedTTSDuration);
-    const actualTTSDuration = await getDuration(config.video.accurate_render_method ? finalTTSVideoFile : finalTTSFile, true, true, sharedMultiProgress, "⏳ Calculating accurate TTS duration...");
+    const actualTTSDuration = await getDuration(config.video.accurate_render_method ? finalTTSVideoFile : finalTTSFile, sharedMultiProgress, true, "⏳ Calculating accurate TTS duration...");
     const totalDurationSeconds = config.video.accurate_render_method ? actualTTSDuration : Math.max(calculatedTTSDuration, actualTTSDuration);
     // sharedMultiProgress.terminate();
     // console.log('Actual duration from file:', actualTTSDuration);
     const ttsDurationCorrection = config.video.accurate_render_method ? 0 : ((actualTTSDuration - calculatedTTSDuration) / videoParts.length);
     sharedMultiProgress.terminate();
     console.log(`🎥 Video will be ${prettyMilliseconds(totalDurationSeconds * 1000, {verbose: true})} long!`)
-    const useVideoFileDuration = await getDuration(useVideoFile);
+    const useVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress);
     if(totalDurationSeconds > useVideoFileDuration){
         if(config.video.loop){
             const numVideoLoops = Math.ceil(totalDurationSeconds / useVideoFileDuration);
             const videoLoopedFile = `${useVideoFile.split('.').slice(0, -1).join('.')}-looped-${numVideoLoops}.${useVideoFile.split('.').pop()}`;
             if(!existsAndHasContent(videoLoopedFile)){
-                await runWithProgress(
+                await runAutoProgress(
                     ffmpeg()
                         .input(useVideoFile)
                         .inputOptions([`-stream_loop ${numVideoLoops}`])
@@ -351,13 +361,13 @@ async function main() {
             process.exit(1);
         }
     }
-    const useAudioFileDuration = await getDuration(useAudioFile);
+    const useAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress);
     if(totalDurationSeconds > useAudioFileDuration){
         if(config.audio.loop){
             const numAudioLoops = Math.ceil(totalDurationSeconds / useAudioFileDuration);
             const audioLoopedFile = `${useAudioFile.split('.').slice(0, -1).join('.')}-looped-${numAudioLoops}.${useAudioFile.split('.').pop()}`;
             if(!existsAndHasContent(audioLoopedFile)){
-                await runWithProgress(
+                await runAutoProgress(
                     ffmpeg()
                         .input(useAudioFile)
                         .inputOptions([`-stream_loop ${numAudioLoops}`])
@@ -378,10 +388,10 @@ async function main() {
     if (config.video.video_trim_method == 'keep_start'){
         start = 0;
     } else if (config.video.video_trim_method == 'keep_end'){
-        const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, sharedMultiProgress, "⏳ Calculating accurate background video duration...");
+        const accurateUseVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
         start = accurateUseVideoFileDuration - totalDurationSeconds;
     }else{ // random
-        const accurateUseVideoFileDuration = await getDuration(useVideoFile, true, true, sharedMultiProgress, "⏳ Calculating accurate background video duration...");
+        const accurateUseVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress, true, "⏳ Calculating accurate background video duration...");
         const precision = 1000000;
         const extraVideoDuration = Math.floor((accurateUseVideoFileDuration - totalDurationSeconds)*precision);
         start = crypto.randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
@@ -500,7 +510,7 @@ async function main() {
             currentTime = currentTime + ttsDuration + config.tts.extra_silence;
         }
     }
-    await runWithProgress(
+    await runAutoProgress(
         finalVideoCmd
             .complexFilter([...finalVideoFilters, ...overlayFilters], 'tmp')
             .withAudioBitrate(`${config.audio.bitrate}k`)

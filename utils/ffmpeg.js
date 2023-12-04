@@ -2,57 +2,72 @@ const os = require('os');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 
-function runWithProgress(ffmpegCmd, MultiProgressBar, label='🎥 Rendering...'){
-    const bar = MultiProgressBar.newDefaultBarWithLabel(label);
+function runAutoProgress(ffmpegCmd, MultiProgressBar, label='🎥 Rendering...', appearAfter=1500){
+    let bar;
+    let preBarProgress = 0;
+    // const bar = MultiProgressBar.newDefaultBarWithLabel(label);
     return new Promise((resolve, reject) => {
         let cmd;
+        let barStartTimer = setTimeout(() => {
+            bar = MultiProgressBar.newDefaultBarWithLabel(label)
+        }, appearAfter)
         ffmpegCmd
             .outputOptions([`-threads ${os.cpus().length}`, '-y'])
             .on('progress', function(progress) {
-                bar.update(progress.percent / 100);
+                const progressDecimal = progress.percent / 100;
+                if(bar){
+                    bar.update(progressDecimal);
+                }else{
+                    preBarProgress = progressDecimal;
+                }
             })
             .on('start', ffmpegCLICommand => {
                 cmd = ffmpegCLICommand;
             })
-            .on('error', reject)
+            .on('error', (err) => {
+                clearTimeout(barStartTimer);
+                reject(err);
+            })
             .on('end', (stdout, stderr) => {
-                bar.update(100);
+                clearTimeout(barStartTimer);
+                if(bar){
+                    bar.update(100);
+                }
                 resolve({ stdout, stderr, cmd }); // setImmediate gives the progress bar time to finish rendering
             })
             .run()
+        
     })
 }
 
-function runWithoutProgress(ffmpegCmd){
-    return new Promise((resolve, reject) => {
-        let cmd;
-        ffmpegCmd
-            .outputOptions([`-threads ${os.cpus().length}`, '-y'])
-            .on('start', ffmpegCLICommand => {
-                cmd = ffmpegCLICommand;
-            })
-            .on('error', reject)
-            .on('end', (stdout, stderr) => resolve({ stdout, stderr, cmd }))
-            .run()
-    })
-}
-
-async function getDuration(file, accurate=false, withProgress=false, MultiProgressBar = undefined, progressLabel='⏳ Calcuating duration...'){ // Accurate=true takes much longer
+async function getDuration(file, MultiProgressBar, accurate=false, progressLabel='⏳ Calculating duration...', appearAfter=1500){ // Accurate=true takes much longer
     if(accurate){
         // ffmpegCmd = ffmpeg.input(filename).output('/dev/null', f="null", progress='/dev/stdout')
-        const bar = withProgress ? MultiProgressBar.newDefaultBarWithLabel(progressLabel) : null;
-        const decodeResult = await new Promise((resolve, reject) =>
+        let bar;
+        let preBarProgress = 0;
+        // const bar = withProgress ? MultiProgressBar.newDefaultBarWithLabel(progressLabel) : null;
+        const decodeResult = await new Promise((resolve, reject) => {
+            let barStartTimer = setTimeout(() => {
+                bar = MultiProgressBar.newDefaultBarWithLabel(progressLabel);
+            }, appearAfter)
             ffmpeg({ stdoutLines: 0 })
                 .input(file)
                 .outputOptions(['-f null', '-progress /dev/stdout', `-threads ${os.cpus().length}`])
                 .output(`/dev/null`)
-                .on('error', reject)
+                .on('error', (err) => {
+                    clearTimeout(barStartTimer);
+                    reject(err);
+                })
                 .on('progress', function(progress) {
+                    const progressDecimal = progress.percent / 100;
                     if(bar){
-                        bar.update(progress.percent / 100);
+                        bar.update(progressDecimal);
+                    } else {
+                        preBarProgress = progressDecimal;
                     }
                 })
                 .on('end', function(stdout) {
+                    clearTimeout(barStartTimer);
                     if(bar){
                         bar.update(100);
                     }
@@ -66,7 +81,7 @@ async function getDuration(file, accurate=false, withProgress=false, MultiProgre
                     }
                 })
                 .run()
-        );
+        });
         if(decodeResult){
             return decodeResult;
         }
@@ -98,11 +113,10 @@ async function concatFiles(options){
     }
     const audio_bitrate = options.audio_bitrate;
     const video_bitrate = options.video_bitrate;
-    const progress = options.progress ?? false;
     const MultiProgressBar = options.MultiProgressBar;
     const progressLabel = options.progressLabel;
     const demuxer = options.demuxer ?? true;
-    const runCmd = progress ? (cmd) => runWithProgress(cmd, MultiProgressBar, progressLabel) : (cmd) => runWithoutProgress(cmd);
+    const runCmd = cmd => runAutoProgress(cmd, MultiProgressBar, progressLabel)
     if(demuxer){
         const fileListingFile = `${outFile}.txt`;
         fs.writeFileSync(fileListingFile, files.map(f=>`file '${f}'\n`).join(''));
@@ -139,8 +153,7 @@ async function concatFiles(options){
 }
 
 exports = module.exports = {
-    runWithProgress,
-    runWithoutProgress,
+    runAutoProgress,
     getDuration,
     ffmpeg,
     concatFiles,

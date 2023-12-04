@@ -3,7 +3,7 @@ const fs = require('fs');
 const ytdl = require('ytdl-core');
 
 const { existsAndHasContent } = require('./fs');
-const { ffmpeg, runWithProgress } = require('./ffmpeg');
+const { ffmpeg, runAutoProgress } = require('./ffmpeg');
 
 async function download(url, toDir, MultiProgressBar = undefined){
     const urlInfo = await ytdl.getInfo(url);
@@ -45,7 +45,7 @@ async function download(url, toDir, MultiProgressBar = undefined){
         pipeVideoStream.on('error', reject);
     });
     await Promise.all([audioPromise, videoPromise]);
-    await runWithProgress(
+    await runAutoProgress(
         ffmpeg()
             .input(`${urlFile}.video.tmp`)
             .input(`${urlFile}.audio.tmp`)
