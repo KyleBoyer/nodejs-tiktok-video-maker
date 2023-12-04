@@ -23,9 +23,7 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
 
 
 ### Nice to have
- - ESLint
- - Typescript
  - Translate story
- - Caption effects
+ - Caption effects (grow/shrink/rotate/others)
  - Web UI
  - Config file builder / helper (might be pointless if the web UI does this)

@@ -12,8 +12,8 @@ WORKDIR /app
 
 COPY ./package* ./
 
-RUN npm install
+RUN npm install && npm run build
 
 COPY . ./
 
-ENTRYPOINT [ "node", "index.js" ]
+ENTRYPOINT [ "node", "dist/index.js" ]
