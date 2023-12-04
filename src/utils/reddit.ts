@@ -8,6 +8,7 @@ import { markdownToTxt as removeMarkdown } from 'markdown-to-txt';
 
 import { existsAndHasContent } from './fs';
 import { redditDir } from './dirs';
+import { validateConfig } from './config';
 const trackingFile = Path.join(redditDir, 'tracking.json');
 const trackingObj = existsAndHasContent(trackingFile) ? JSON.parse(fs.readFileSync(trackingFile).toString()) : {};
 
@@ -15,14 +16,14 @@ function fixStory(story: {
     id: string,
     title: string,
     content: string,
-    folder: string,
+    subreddit: string,
 }) {
   const newContent = removeMarkdown(story.content.split('&#x200B;').join('').trim()).trim();
   return {
     id: story.id,
     title: story.title,
     content: newContent,
-    folder: story.folder,
+    subreddit: story.subreddit,
   };
 }
 function isComplete(postId: string) {
@@ -31,11 +32,11 @@ function isComplete(postId: string) {
 
 export class RedditUtil {
   r: Snoowrap;
-  config: any;
-  constructor(config: any) {
+  config: ReturnType<typeof validateConfig>;
+  constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
     this.r = new Snoowrap({
-      userAgent: config.story.source.userAgent || 'RedditVideoMaker-node',
+      userAgent: config.story.source.user_agent || 'nodejs-tiktok-video-maker',
       clientId: config.story.source.client_id,
       clientSecret: config.story.source.client_secret,
       refreshToken: config.story.source.refresh_token,
@@ -82,7 +83,7 @@ export class RedditUtil {
           id: randomHotItem.id,
           content: removeMarkdown(randomHotItem.selftext).trim(),
           title: randomHotItem.title,
-          folder: randomHotItem.subreddit.display_name,
+          subreddit: randomHotItem.subreddit.display_name,
         });
       }
     }
@@ -93,7 +94,7 @@ export class RedditUtil {
 
   async getPostInfo(submissionID: string) {
     const result = this.r.getSubmission(submissionID);
-    const [id, content, title, folder] = await Promise.all([
+    const [id, content, title, subreddit] = await Promise.all([
       result.id,
       result.selftext,
       result.title,
@@ -104,7 +105,7 @@ export class RedditUtil {
       id,
       content,
       title,
-      folder,
+      subreddit,
     });
   }
 }

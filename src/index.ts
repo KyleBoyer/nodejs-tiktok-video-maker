@@ -122,7 +122,12 @@ async function main() {
     }
     useAudioFile = audioSpeedVolumeChangedFile;
   }
-  let story: any = {};
+  let story: {
+    title: string,
+    content: string,
+    subreddit?: string,
+    id?: string,
+  };
   if (config.story.source.name == 'reddit') {
     if (config.story.source.post_id) {
       story = await reddit.getPostInfo(config.story.source.post_id);
@@ -130,7 +135,7 @@ async function main() {
       story = await reddit.getRandom();
       sharedMultiProgress.terminate();
       console.log(`🎲 Random story title: ${story.title}`);
-      console.log(`🎲 Random story link: https://reddit.com/r/${story.folder}/comments/${story.id}`);
+      console.log(`🎲 Random story link: https://reddit.com/r/${story.subreddit}/comments/${story.id}`);
     } else {
       sharedMultiProgress.terminate();
       console.error('If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.');

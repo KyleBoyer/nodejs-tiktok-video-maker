@@ -3,13 +3,13 @@ import { object, array, number, boolean, string, StringSchema, AnyObject, Flags,
 
 import { voices } from './tts';
 
-const isString = (str: any) => typeof str === 'string' || str instanceof String;
-const flattenVoices = (voices: any): string[] => {
-  const flattenMore = (v: any)=> isString(v) ? v : flattenVoices(v);
+const isString = (str: unknown) => typeof str === 'string' || str instanceof String;
+const flattenVoices = (voices: unknown[] | unknown): string[] => {
+  const flattenMore = (v: string | unknown)=> isString(v) ? v : flattenVoices(v);
   if (Array.isArray(voices)) {
-    return voices.flat().map(flattenMore).flat();
+    return voices.flat().map(flattenMore).flat() as string[];
   }
-  return Object.values(voices).flat().map(flattenMore).flat();
+  return Object.values(voices).flat().map(flattenMore).flat() as string[];
 };
 
 const textReplacementSchema = tuple([string(), string()]); // array().of(string().required()).min(2).max(2).required();
@@ -73,12 +73,13 @@ const configSchema = object({
     voice: string().default('en_male_narration').when('name', (name, s) => {
       const useName = Array.isArray(name) ? name.pop() : name;
       const ttsSpecificVoices = voices[useName];
+      const ttsSpecificVoicesFlat = ttsSpecificVoices ? flattenVoices(ttsSpecificVoices) : [];
       let newS: StringSchema<string, AnyObject, string, Flags> = s;
-      if (ttsSpecificVoices.length) {
-        newS = newS.oneOf(flattenVoices(ttsSpecificVoices));
+      if (ttsSpecificVoicesFlat.length) {
+        newS = newS.oneOf(ttsSpecificVoicesFlat);
       }
       if (ttsSpecificVoices.length == 1) {
-        newS = newS.default(ttsSpecificVoices[0]);
+        newS = newS.default(ttsSpecificVoicesFlat[0]);
       }
       return newS;
     }),
@@ -102,6 +103,7 @@ const configSchema = object({
       post_id: string().optional(),
       client_id: string().when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
       client_secret: string().when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+      user_agent: string().default('nodejs-tiktok-video-maker'),
       refresh_token: string().optional(),
       username: string().optional(),
       password: string().optional(),
@@ -142,7 +144,7 @@ export function loadConfig(fileName=`${process.cwd()}/config.json`) {
     process.exit(1);
   }
   const fileContents = readFileSync(fileName).toString();
-  let parsed;
+  let parsed: unknown;
   try {
     parsed = JSON.parse(fileContents);
   } catch (_err) {
@@ -162,7 +164,7 @@ export function loadConfig(fileName=`${process.cwd()}/config.json`) {
   return config;
 }
 
-export function validateConfig(configObj: any) {
+export function validateConfig(configObj: unknown) {
   const config = configSchema.validateSync(configObj, {
     abortEarly: false,
     stripUnknown: true,
