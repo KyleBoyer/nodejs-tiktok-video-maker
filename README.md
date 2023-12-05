@@ -13,10 +13,10 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Install dependencies with `npm install`
  - Create a config.json in the same directory you will be running this script from.
    - Config file must include the required fields, if you create the config.json with `{}`, and run the main script, it will error out and inform you of which fields are missing or incorrect.
- - Run the main script `node index.js`
+ - Run the main script `npm run start`
 
 ### TODO
- - All AI functions
+ - AI new story / reword story functions
  - Screenshot Reddit Title function
  - More TTS voice options
  - Review CONFIG.md and improve it
