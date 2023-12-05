@@ -386,9 +386,9 @@ async function main() {
     }
   }
   let videoStart = null;
-  if (config.video.tim_method == 'keep_start') {
+  if (config.video.trim_method == 'keep_start') {
     videoStart = 0;
-  } else if (config.video.tim_method == 'keep_end') {
+  } else if (config.video.trim_method == 'keep_end') {
     const accurateUseVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress, true, '⏳ Calculating accurate background video duration...');
     videoStart = accurateUseVideoFileDuration - totalDurationSeconds;
   } else { // random
@@ -398,9 +398,9 @@ async function main() {
     videoStart = crypto.randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
   }
   let audioStart = null;
-  if (config.audio.tim_method == 'keep_start') {
+  if (config.audio.trim_method == 'keep_start') {
     audioStart = 0;
-  } else if (config.audio.tim_method == 'keep_end') {
+  } else if (config.audio.trim_method == 'keep_end') {
     const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, '⏳ Calculating accurate background audio duration...');
     audioStart = accurateUseAudioFileDuration - totalDurationSeconds;
   } else { // random

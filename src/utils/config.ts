@@ -19,7 +19,7 @@ const audioSchema = object({
   volume: number().min(0).max(1).default(0.15),
   url: string().required(),
   loop: boolean().default(true),
-  tim_method: string().oneOf(['keep_start', 'keep_end', 'random']).default('keep_start'),
+  trim_method: string().oneOf(['keep_start', 'keep_end', 'random']).default('keep_start'),
   bitrate: number().oneOf([8, 16, 24, 32, 40, 48, 64, 80, 96, 112, 128, 160, 192, 224, 256]).default(256),
 });
 
@@ -50,7 +50,7 @@ const configSchema = object({
     crop_style_height: string().oneOf(['top', 'center', 'bottom']).default('center'),
     scale_pad: boolean().default(true),
     scale_pad_color: string().default('black'),
-    tim_method: string().oneOf(['keep_start', 'keep_end', 'random']).default('random'),
+    trim_method: string().oneOf(['keep_start', 'keep_end', 'random']).default('random'),
     url: string().required(),
     loop: boolean().default(true),
     height: number().min(1).default(1920),

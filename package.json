@@ -2,9 +2,10 @@
   "name": "redditvideomaker-node",
   "version": "1.0.0",
   "description": "NodeJS program to make Reddit videos for social media",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "start": "tsc && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kyle Boyer",
