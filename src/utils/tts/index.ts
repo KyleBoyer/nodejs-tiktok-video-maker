@@ -18,7 +18,7 @@ export class TTSUtil {
     };
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {
-    return this.ttsModules[this.config.tts.name].generate(text, MultiProgressBar);
+    return this.ttsModules[this.config.tts.source].generate(text, MultiProgressBar);
   }
 }
 

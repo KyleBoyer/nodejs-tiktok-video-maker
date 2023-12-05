@@ -128,10 +128,10 @@ async function main() {
     subreddit?: string,
     id?: string,
   };
-  if (config.story.source.name == 'reddit') {
-    if (config.story.source.post_id) {
-      story = await reddit.getPostInfo(config.story.source.post_id);
-    } else if (config.story.source.random) {
+  if (config.story.source == 'reddit') {
+    if (config.story.post_id) {
+      story = await reddit.getPostInfo(config.story.post_id);
+    } else if (config.story.random) {
       story = await reddit.getRandom();
       sharedMultiProgress.terminate();
       console.log(`🎲 Random story title: ${story.title}`);
@@ -141,10 +141,10 @@ async function main() {
       console.error('If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.');
       process.exit(1);
     }
-  } else if (config.story.source.name == 'ai') {
+  } else if (config.story.source == 'ai') {
     story = await ai.generateNewStory();
   }
-  if (config.story.source.ai_rewrite) {
+  if (config.story.ai_rewrite) {
     story.content = await ai.rewordStory(story.content);
   }
   story.content = await replacer.replace(story.content, config.replacements['text-and-audio']);
@@ -472,7 +472,7 @@ async function main() {
   if (config.video.accurate_render_method) {
     finalVideoCmd = finalVideoCmd.inputOptions(['-vcodec libvpx-vp9']);
   }
-  finalVideoCmd=finalVideoCmd.withDuration(totalDurationSeconds);
+  // finalVideoCmd=finalVideoCmd.withDuration(totalDurationSeconds);
   const overlayFilters: string | ffmpeg.FilterSpecification | (string | ffmpeg.FilterSpecification)[] = [];
   if (config.video.accurate_render_method) {
     // finalVideoCmd = finalVideoCmd.outputOptions(['-pix_fmt yuva420p']).withVideoCodec('libvpx-vp9')
@@ -533,7 +533,7 @@ async function main() {
       '🎥 Rendering final video...'
   );
   sharedMultiProgress.terminate();
-  if (config.story.source.name == 'reddit') {
+  if (config.story.source == 'reddit') {
     RedditUtil.markComplete(story.id);
   }
   if (config.cleanup.youtube) {

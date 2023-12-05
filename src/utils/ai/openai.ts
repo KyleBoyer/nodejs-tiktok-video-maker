@@ -7,7 +7,7 @@ export class OpenAIUtil {
   config: ReturnType<typeof validateConfig>;
   constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
-    const openaiKey = config.story.source.openai_api_key;
+    const openaiKey = config.story.openai_api_key;
   }
 
   async rewordStory(originalStory: string): Promise<string> {
@@ -18,7 +18,7 @@ export class OpenAIUtil {
     content: string
     title: string
   }> {
-    const prompt = this.config.story.source.prompt;
+    const prompt = this.config.story.prompt;
     // TODO
     return {
       title: 'Not implemented',

@@ -21,13 +21,13 @@ export class AIUtil {
   }
 
   async rewordStory(originalStory: string): Promise<string> {
-    return this.aiModules[this.config.story.source.ai_type].rewordStory(originalStory);
+    return this.aiModules[this.config.story.ai_type].rewordStory(originalStory);
   }
   async generateNewStory(): Promise<{
     content: string
     title: string
   }> {
-    return this.aiModules[this.config.story.source.ai_type].generateNewStory();
+    return this.aiModules[this.config.story.ai_type].generateNewStory();
   }
 }
 

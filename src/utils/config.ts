@@ -67,12 +67,12 @@ const configSchema = object({
     }),
   }),
   tts: object({
-    name: string().oneOf(['google-translate', 'tiktok']).default('google-translate'), // TODO support more TTS services
+    source: string().oneOf(['google-translate', 'tiktok']).default('google-translate'), // TODO support more TTS services
     speed: number().min(0.5).max(100).default(1),
     volume: number().min(0).max(1).default(1),
-    voice: string().default('en_male_narration').when('name', (name, s) => {
-      const useName = Array.isArray(name) ? name.pop() : name;
-      const ttsSpecificVoices = voices[useName];
+    voice: string().default('en_male_narration').when('source', (source, s) => {
+      const useSource = Array.isArray(source) ? source.pop() : source;
+      const ttsSpecificVoices = voices[useSource];
       const ttsSpecificVoicesFlat = ttsSpecificVoices ? flattenVoices(ttsSpecificVoices) : [];
       let newS: StringSchema<string, AnyObject, string, Flags> = s;
       if (ttsSpecificVoicesFlat.length) {
@@ -88,48 +88,46 @@ const configSchema = object({
     extra_silence: number().min(0).default(0.3),
   }),
   story: object({
-    source: object({
-      name: string().required().oneOf(['reddit', 'ai']),
-      // AI Specific
-      ai_type: string().oneOf(['openai']).default('openai').when('name', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}), // TODO support different AI types
-      openai_api_key: string().when(['name', 'ai_type', 'ai_rewrite'], {
-        is: (name: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (name == 'ai' || aiRewrite),
-        then: (s) => s.required(),
-        otherwise: (s) => s.optional(),
-      }),
-      prompt: string().when('name', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      generated_min_length: number().default(500).when('name', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      // Reddit Specific
-      post_id: string().optional(),
-      client_id: string().when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      client_secret: string().when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      user_agent: string().default('nodejs-tiktok-video-maker'),
-      refresh_token: string().optional(),
-      username: string().optional(),
-      password: string().optional(),
-      ai_rewrite: boolean().default(false).when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      screenshot_title: boolean()
-          .when('ai_rewrite', { is: true, then: (s) => s.default(false), otherwise: (s) => s.default(true)})
-          .when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      random: boolean().default(true).when('name', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      // Reddit Random Specific
-      random_limit: number().default(50)
-          .when(['name', 'random'], { is: (name: string, random: boolean) => name == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      random_subreddits: array().of(string())
-          .when(['name', 'random'], { is: (name: string, random: boolean) => name == 'reddit' && random, then: (s) => s.min(1).required(), otherwise: (s) => s.optional()}),
-      random_min_comments: number().default(0)
-          .when(['name', 'random'], { is: (name: string, random: boolean) => name == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      random_max_length: number().default(Number.MAX_SAFE_INTEGER)
-          .when(['name', 'random'], { is: (name: string, random: boolean) => name == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      random_min_length: number().default(30)
-          .when(['name', 'random'], { is: (name: string, random: boolean) => name == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-      random_allow_nsfw: boolean().default(false)
-          .when(['name', 'random'], { is: (name: string, random: boolean) => name == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    }).test('story.source.refresh_token or (story.source.username and story.source.password)', 'story.source.refresh_token OR (story.source.username AND story.source.password) is required', (v) => {
-      return !!(!v.name || v.name != 'reddit' || (v.refresh_token || (v.username && v.password)));
-    }).test('story.source.post_id OR story.source.random', 'story.source.post_id OR story.source.random is required', (v) => {
-      return !!(!v.name || v.name != 'reddit' || (v.post_id || v.random));
+    source: string().required().oneOf(['reddit', 'ai']),
+    // AI Specific
+    ai_type: string().oneOf(['openai']).default('openai').when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}), // TODO support different AI types
+    openai_api_key: string().when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
     }),
+    prompt: string().when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    generated_min_length: number().default(500).when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    // Reddit Specific
+    post_id: string().optional(),
+    client_id: string().when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    client_secret: string().when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    user_agent: string().default('nodejs-tiktok-video-maker'),
+    refresh_token: string().optional(),
+    username: string().optional(),
+    password: string().optional(),
+    ai_rewrite: boolean().default(false).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    screenshot_title: boolean()
+        .when('ai_rewrite', { is: true, then: (s) => s.default(false), otherwise: (s) => s.default(true)})
+        .when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    random: boolean().default(true).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    // Reddit Random Specific
+    random_limit: number().default(50)
+        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    random_subreddits: array().of(string())
+        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.min(1).required(), otherwise: (s) => s.optional()}),
+    random_min_comments: number().default(0)
+        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    random_max_length: number().default(Number.MAX_SAFE_INTEGER)
+        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    random_min_length: number().default(30)
+        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    random_allow_nsfw: boolean().default(false)
+        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+  }).test('story.refresh_token or (story.username and story.password)', 'story.refresh_token OR (story.username AND story.password) is required', (v) => {
+    return !!(!v.source || v.source != 'reddit' || (v.refresh_token || (v.username && v.password)));
+  }).test('story.post_id OR story.random', 'story.post_id OR story.random is required', (v) => {
+    return !!(!v.source || v.source != 'reddit' || (v.post_id || v.random));
   }),
   replacements: object({
     'text-and-audio': array().of(textReplacementSchema).default([]),
