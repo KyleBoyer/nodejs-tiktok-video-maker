@@ -121,6 +121,26 @@ const configSchema = object({
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
     }),
+    openai_rewrite_retries: number().default(5).when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_rewrite_retry_fail_on_error: boolean().default(true).when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_rewrite_chunk_max_tokens: number().default(1000).when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_rewrite_length: number().default(1).when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
     prompt: string().when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     generated_min_length: number().default(500).when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     // Reddit Specific
