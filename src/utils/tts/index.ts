@@ -3,10 +3,13 @@ import { GoogleTranslateTTS, voices as GoogleTranslateTTSVoices } from './google
 import { OpenAITTS, voices as OpenAITTSVoices } from './openai';
 import { MultiProgress } from '../multi-progress';
 import { validateConfig } from '../config';
+import emojiRegex from 'emoji-regex';
 
 type TTSClass = {
   generate: (text: string, MultiProgressBar: MultiProgress) => Promise<Buffer>
 }
+
+const removeEmojis = (str: string) => str.split(emojiRegex()).join(''); // Possibly implement per TTS, as some might support speaking emojis - but do we really want that?
 
 export class TTSUtil {
   ttsModules: Record<string, TTSClass>;
@@ -20,7 +23,7 @@ export class TTSUtil {
     };
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {
-    return this.ttsModules[this.config.tts.source].generate(text, MultiProgressBar);
+    return this.ttsModules[this.config.tts.source].generate(removeEmojis(text), MultiProgressBar);
   }
 }
 

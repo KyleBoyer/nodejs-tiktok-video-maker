@@ -30,4 +30,3 @@ export class AIUtil {
     return this.aiModules[this.config.story.ai_type].generateNewStory();
   }
 }
-
