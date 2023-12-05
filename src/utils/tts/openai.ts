@@ -8,11 +8,12 @@ export class OpenAITTS {
     this.config = config;
     this.openai = new OpenAI({
       apiKey: config.tts.openai_api_key,
+      baseURL: config.tts.openai_api_base,
     });
   }
   async generate(text: string): Promise<Buffer> {
     const mp3 = await this.openai.audio.speech.create({
-      model: this.config.tts.voice.endsWith('-hd') ? 'tts-1-hd' : 'tts-1',
+      model: this.config.tts.openai_model,
       voice: this.config.tts.voice.replace(/-hd$/, '') as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
       input: text,
     });
@@ -21,6 +22,4 @@ export class OpenAITTS {
   }
 }
 
-const openaiVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
-
-export const voices: string[] = openaiVoices.map((v)=>[v, `${v}-hd`]).flat();
+export const voices: string[] = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];

@@ -73,6 +73,16 @@ const configSchema = object({
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
     }),
+    openai_api_base: string().default('https://api.openai.com/v1').when('source', {
+      is: 'openai',
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_model: string().default('tts-1-hd').when('source', {
+      is: 'openai',
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
     speed: number().min(0.5).max(100).default(1),
     volume: number().min(0).max(1).default(1),
     voice: string().default('en_male_narration').when('source', (source, s) => {
@@ -97,6 +107,16 @@ const configSchema = object({
     // AI Specific
     ai_type: string().oneOf(['openai']).default('openai').when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}), // TODO support different AI types
     openai_api_key: string().when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_api_base: string().default('https://api.openai.com/v1').when(['source', 'ai_type', 'ai_rewrite'], {
+      is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_model: string().default('gpt-3.5-turbo').when(['source', 'ai_type', 'ai_rewrite'], {
       is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
