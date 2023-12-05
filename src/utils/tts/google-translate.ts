@@ -6,6 +6,7 @@ import { getAudioBase64 } from 'google-tts-api';
 import { ttsDir } from '../dirs';
 import { concatFiles } from '../ffmpeg';
 import { MultiProgress } from '../multi-progress';
+import { validateConfig } from '../config';
 
 async function callAPI(text: string) {
   try {
@@ -27,8 +28,8 @@ async function callAPI(text: string) {
 }
 
 export class GoogleTranslateTTS {
-  config: any;
-  constructor(config: any) {
+  config: ReturnType<typeof validateConfig>;
+  constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {

@@ -472,7 +472,7 @@ async function main() {
   if (config.video.accurate_render_method) {
     finalVideoCmd = finalVideoCmd.inputOptions(['-vcodec libvpx-vp9']);
   }
-  // finalVideoCmd=finalVideoCmd.withDuration(totalDurationSeconds);
+  finalVideoCmd=finalVideoCmd.withDuration(totalDurationSeconds);
   const overlayFilters: string | ffmpeg.FilterSpecification | (string | ffmpeg.FilterSpecification)[] = [];
   if (config.video.accurate_render_method) {
     // finalVideoCmd = finalVideoCmd.outputOptions(['-pix_fmt yuva420p']).withVideoCodec('libvpx-vp9')

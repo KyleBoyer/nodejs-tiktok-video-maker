@@ -3,10 +3,11 @@ import { parse } from 'path';
 
 import { listFiles } from './fs';
 import { fontsDir } from './dirs';
+import { validateConfig } from './config';
 
 export class ImageGenerator {
-  config: any;
-  constructor(config: any) {
+  config: ReturnType<typeof validateConfig>;
+  constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
   }
   fromText(text: string) {

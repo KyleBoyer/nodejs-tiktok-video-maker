@@ -6,6 +6,7 @@ import axios from 'axios';
 import { ttsDir } from '../dirs';
 import { concatFiles } from '../ffmpeg';
 import { MultiProgress } from '../multi-progress';
+import { validateConfig } from '../config';
 
 async function callAPI(text: string, sessionId: string, voice='en_male_narration') {
   try {
@@ -34,8 +35,8 @@ async function callAPI(text: string, sessionId: string, voice='en_male_narration
 }
 
 export class TikTokTTS {
-  config: any;
-  constructor(config: any) {
+  config: ReturnType<typeof validateConfig>;
+  constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {

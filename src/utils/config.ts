@@ -67,7 +67,12 @@ const configSchema = object({
     }),
   }),
   tts: object({
-    source: string().oneOf(['google-translate', 'tiktok']).default('google-translate'), // TODO support more TTS services
+    source: string().oneOf(['google-translate', 'tiktok', 'openai']).default('google-translate'), // TODO support more TTS services
+    openai_api_key: string().when('source', {
+      is: 'openai',
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
     speed: number().min(0.5).max(100).default(1),
     volume: number().min(0).max(1).default(1),
     voice: string().default('en_male_narration').when('source', (source, s) => {

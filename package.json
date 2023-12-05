@@ -21,6 +21,7 @@
     "google-tts-api": "^2.0.2",
     "markdown-to-txt": "^2.0.1",
     "natural": "^6.9.1",
+    "openai": "^4.20.1",
     "pretty-ms": "^8.0.0",
     "snoowrap": "^1.23.0",
     "tmp": "^0.2.1",

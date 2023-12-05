@@ -1,5 +1,6 @@
 import { TikTokTTS, voices as TikTokTTSVoices } from './tiktok';
 import { GoogleTranslateTTS, voices as GoogleTranslateTTSVoices } from './google-translate';
+import { OpenAITTS, voices as OpenAITTSVoices } from './openai';
 import { MultiProgress } from '../multi-progress';
 import { validateConfig } from '../config';
 
@@ -15,6 +16,7 @@ export class TTSUtil {
     this.ttsModules = {
       'tiktok': new TikTokTTS(config),
       'google-translate': new GoogleTranslateTTS(config),
+      'openai': new OpenAITTS(config),
     };
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {
@@ -25,4 +27,5 @@ export class TTSUtil {
 export const voices: Record<string, string[] | Record<string, string | string[]>> = {
   'tiktok': TikTokTTSVoices,
   'google-translate': GoogleTranslateTTSVoices,
+  'openai': OpenAITTSVoices,
 };
