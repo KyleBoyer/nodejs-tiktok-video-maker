@@ -20,8 +20,8 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Logging/progress bar for AI reword/new story functions
  - Screenshot Reddit title function
  - Generate CONFIG.md explaining the settings (might be pointless if the web UI does this)
- - More TTS voice options
- - More AI options
+ - More TTS service options
+ - More AI service options
 
 
 ### Nice to have
