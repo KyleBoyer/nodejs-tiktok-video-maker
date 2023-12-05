@@ -21,6 +21,7 @@ import { generateValidFilename, existsAndHasContent } from './utils/fs';
 
 import { loadConfig } from './utils/config';
 const config = loadConfig();
+const configHash = crypto.createHash('md5').update(JSON.stringify(config)).digest('hex');
 const image = new ImageGenerator(config);
 const reddit = new RedditUtil(config);
 const tts = new TTSUtil(config);
@@ -152,7 +153,7 @@ async function main() {
   const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
   const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
   const generateCaptionAndAudio = async (text: string) => {
-    const hash = crypto.createHash('md5').update(text).digest('hex');
+    const hash = crypto.createHash('md5').update(configHash + text).digest('hex');
     const imageFile = Path.join(captionsDir, `${hash}.png`);
     const ttsFile = Path.join(ttsDir, `${hash}.mp3`);
     const [replacedText, replacedAudio] = await Promise.all([
@@ -233,8 +234,8 @@ async function main() {
   };
   const titleRenderings = await generateCaptionAndAudio(story.title);
   const videoParts = [titleRenderings];
-  const silenceAudioFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}.mp3`);
-  const silenceVideoFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}.webm`);
+  const silenceAudioFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.mp3`);
+  const silenceVideoFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.webm`);
   if (config.tts.extra_silence > 0) {
     if (!existsAndHasContent(silenceAudioFile)) {
       await runAutoProgress(
@@ -263,7 +264,7 @@ async function main() {
       // )
     }
     if (config.video.accurate_render_method) {
-      const silenceImageFile = Path.join(ttsDir, 'blank.png');
+      const silenceImageFile = Path.join(ttsDir, `blank-${configHash}.png`);
       if (!existsAndHasContent(silenceImageFile)) {
         fs.writeFileSync(silenceImageFile, await image.fromText(' '));
       }
@@ -294,7 +295,7 @@ async function main() {
                 [p.videoFile]
     ).flat();
     const concatStr = useConcatParts.join('|');
-    const hash = crypto.createHash('md5').update(concatStr).digest('hex');
+    const hash = crypto.createHash('md5').update(configHash + concatStr).digest('hex');
     finalTTSVideoFile = Path.join(ttsDir, `${hash}.webm`);
     if (!existsAndHasContent(finalTTSVideoFile)) {
       await concatFiles({
@@ -314,7 +315,7 @@ async function main() {
                 [p.audioFile]
     ).flat();
     const concatStr = useConcatParts.join('|');
-    const hash = crypto.createHash('md5').update(concatStr).digest('hex');
+    const hash = crypto.createHash('md5').update(configHash + concatStr).digest('hex');
     finalTTSFile = Path.join(ttsDir, `${hash}.mp3`);
     if (!existsAndHasContent(finalTTSFile)) {
       await concatFiles({

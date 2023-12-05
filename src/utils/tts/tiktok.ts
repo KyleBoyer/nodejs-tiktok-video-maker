@@ -36,11 +36,13 @@ async function callAPI(text: string, sessionId: string, voice='en_male_narration
 
 export class TikTokTTS {
   config: ReturnType<typeof validateConfig>;
+  configHash: string;
   constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
+    this.configHash = crypto.createHash('md5').update(JSON.stringify(config)).digest('hex');
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {
-    const hash = crypto.createHash('md5').update(text).digest('hex');
+    const hash = crypto.createHash('md5').update(this.configHash + text).digest('hex');
     const words = text.split(/\s/);
     const textParts = [];
     let currentPart = words[0];
