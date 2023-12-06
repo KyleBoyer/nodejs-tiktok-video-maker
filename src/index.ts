@@ -1,8 +1,8 @@
 import { MultiProgress } from './utils/multi-progress';
 const sharedMultiProgress = new MultiProgress();
-import fs from 'fs';
-import crypto from 'crypto';
-import Path from 'path';
+import { readFileSync, writeFileSync, rmSync } from 'fs';
+import { createHash, randomInt } from 'crypto';
+import { join } from 'path';
 import * as exponential from 'exponential-backoff';
 const backoffSettings: Partial<exponential.IBackOffOptions> = {
   jitter: 'full',
@@ -21,13 +21,13 @@ import { generateValidFilename, existsAndHasContent } from './utils/fs';
 
 import { loadConfig } from './utils/config';
 const config = loadConfig();
-const configHash = crypto.createHash('md5').update(JSON.stringify(config)).digest('hex');
+const configHash = createHash('md5').update(JSON.stringify(config)).digest('hex');
 const image = new ImageGenerator(config);
 const reddit = new RedditUtil(config);
 const tts = new TTSUtil(config);
 const ai = new AIUtil(config);
 
-import { youtubeDir, captionsDir, ttsDir, outputDir } from './utils/dirs';
+import { youtubeDir, captionsDir, ttsDir, outputDir, aiDir } from './utils/dirs';
 import { runAutoProgress, getDuration, ffmpeg, concatFiles } from './utils/ffmpeg';
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const prettyMsPromise = dynamicImport('pretty-ms');
@@ -154,9 +154,9 @@ async function main() {
   const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
   pb.update(0);
   const generateCaptionAndAudio = async (text: string) => {
-    const hash = crypto.createHash('md5').update(configHash + text).digest('hex');
-    const imageFile = Path.join(captionsDir, `${hash}.png`);
-    const ttsFile = Path.join(ttsDir, `${hash}.mp3`);
+    const hash = createHash('md5').update(configHash + text).digest('hex');
+    const imageFile = join(captionsDir, `${hash}.png`);
+    const ttsFile = join(ttsDir, `${hash}.mp3`);
     const [replacedText, replacedAudio] = await Promise.all([
       replacer.replace(text, config.replacements['text-only']),
       replacer.replace(text, config.replacements['audio-only']),
@@ -174,10 +174,10 @@ async function main() {
       exponential.backOff(ttsPromiseFn, backoffSettings),
     ]);
     if (!imageAlreadyExists) {
-      fs.writeFileSync(imageFile, imageContent);
+      writeFileSync(imageFile, imageContent);
     }
     if (!ttsFileAlreadyExists) {
-      fs.writeFileSync(ttsFile, ttsContent);
+      writeFileSync(ttsFile, ttsContent);
     }
     let audioFile = ttsFile;
     if (config.tts.speed != 1 || config.tts.volume != 1) {
@@ -235,8 +235,8 @@ async function main() {
   };
   const titleRenderings = await generateCaptionAndAudio(story.title);
   const videoParts = [titleRenderings];
-  const silenceAudioFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.mp3`);
-  const silenceVideoFile = Path.join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.webm`);
+  const silenceAudioFile = join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.mp3`);
+  const silenceVideoFile = join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.webm`);
   if (config.tts.extra_silence > 0) {
     if (!existsAndHasContent(silenceAudioFile)) {
       await runAutoProgress(
@@ -265,9 +265,9 @@ async function main() {
       // )
     }
     if (config.video.accurate_render_method) {
-      const silenceImageFile = Path.join(ttsDir, `blank-${configHash}.png`);
+      const silenceImageFile = join(ttsDir, `blank-${configHash}.png`);
       if (!existsAndHasContent(silenceImageFile)) {
-        fs.writeFileSync(silenceImageFile, await image.fromText(' '));
+        writeFileSync(silenceImageFile, await image.fromText(' '));
       }
       if (!existsAndHasContent(silenceVideoFile)) {
         await runAutoProgress(
@@ -296,8 +296,8 @@ async function main() {
                 [p.videoFile]
     ).flat();
     const concatStr = useConcatParts.join('|');
-    const hash = crypto.createHash('md5').update(configHash + concatStr).digest('hex');
-    finalTTSVideoFile = Path.join(ttsDir, `${hash}.webm`);
+    const hash = createHash('md5').update(configHash + concatStr).digest('hex');
+    finalTTSVideoFile = join(ttsDir, `${hash}.webm`);
     if (!existsAndHasContent(finalTTSVideoFile)) {
       await concatFiles({
         files: useConcatParts,
@@ -316,8 +316,8 @@ async function main() {
                 [p.audioFile]
     ).flat();
     const concatStr = useConcatParts.join('|');
-    const hash = crypto.createHash('md5').update(configHash + concatStr).digest('hex');
-    finalTTSFile = Path.join(ttsDir, `${hash}.mp3`);
+    const hash = createHash('md5').update(configHash + concatStr).digest('hex');
+    finalTTSFile = join(ttsDir, `${hash}.mp3`);
     if (!existsAndHasContent(finalTTSFile)) {
       await concatFiles({
         files: useConcatParts,
@@ -397,7 +397,7 @@ async function main() {
     const accurateUseVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress, true, '⏳ Calculating accurate background video duration...');
     const precision = 1000000;
     const extraVideoDuration = Math.floor((accurateUseVideoFileDuration - totalDurationSeconds)*precision);
-    videoStart = crypto.randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
+    videoStart = randomInt(0, extraVideoDuration+1) / precision; // +1 because the ending is exclusive
   }
   let audioStart = null;
   if (config.audio.trim_method == 'keep_start') {
@@ -409,10 +409,10 @@ async function main() {
     const accurateUseAudioFileDuration = await getDuration(useAudioFile, sharedMultiProgress, true, '⏳ Calculating accurate background audio duration...');
     const precision = 1000000;
     const extraAudioDuration = Math.floor((accurateUseAudioFileDuration - totalDurationSeconds)*precision);
-    audioStart = crypto.randomInt(0, extraAudioDuration+1) / precision; // +1 because the ending is exclusive
+    audioStart = randomInt(0, extraAudioDuration+1) / precision; // +1 because the ending is exclusive
   }
   const finalVideoExtension = '.' + config.video.output_format;
-  const finalVideoFile = Path.join(outputDir, generateValidFilename(story.title, 256 - finalVideoExtension.length) + finalVideoExtension);
+  const finalVideoFile = join(outputDir, generateValidFilename(story.title, 256 - finalVideoExtension.length) + finalVideoExtension);
   const finalVideoFilters: string | ffmpeg.FilterSpecification | (string | ffmpeg.FilterSpecification)[] = [{
     filter: 'amix', options: { inputs: 3 },
   }];
@@ -537,15 +537,32 @@ async function main() {
   sharedMultiProgress.terminate();
   if (config.story.source == 'reddit') {
     RedditUtil.markComplete(story.id);
+  } else if (config.story.source == 'ai') {
+    const aiTrackingFile = join(aiDir, `${generateValidFilename(config.story.ai_type)}.json`);
+    let newJson;
+    try {
+      if (existsAndHasContent(aiTrackingFile)) {
+        const parsedAITrackingFile = JSON.parse(readFileSync(aiTrackingFile).toString());
+        if (Array.isArray(parsedAITrackingFile)) {
+          newJson = parsedAITrackingFile;
+        } else {
+          newJson = [parsedAITrackingFile];
+        }
+      }
+    } catch (err) {
+      newJson = [];
+    }
+    newJson.push({ epoch: (new Date()).valueOf(), prompt: config.story.openai_new_story_prompt, title: story.title, content: story.content });
+    writeFileSync(aiTrackingFile, JSON.stringify(newJson, null, '\t'));
   }
   if (config.cleanup.youtube) {
-    fs.rmSync(youtubeDir, { recursive: true, force: true });
+    rmSync(youtubeDir, { recursive: true, force: true });
   }
   if (config.cleanup.tts) {
-    fs.rmSync(ttsDir, { recursive: true, force: true });
+    rmSync(ttsDir, { recursive: true, force: true });
   }
   if (config.cleanup.captions) {
-    fs.rmSync(captionsDir, { recursive: true, force: true });
+    rmSync(captionsDir, { recursive: true, force: true });
   }
   sharedMultiProgress.terminate();
   console.log(`Video has been output to: ${finalVideoFile}`);

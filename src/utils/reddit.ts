@@ -1,16 +1,16 @@
 import Snoowrap from 'snoowrap';
 
-import Path from 'path';
-import fs from 'fs';
-import crypto from 'crypto';
+import { join } from 'path';
+import { readFileSync, writeFileSync } from 'fs';
+import { randomInt } from 'crypto';
 
 import { markdownToTxt as removeMarkdown } from 'markdown-to-txt';
 
 import { existsAndHasContent } from './fs';
 import { redditDir } from './dirs';
 import { validateConfig } from './config';
-const trackingFile = Path.join(redditDir, 'tracking.json');
-const trackingObj = existsAndHasContent(trackingFile) ? JSON.parse(fs.readFileSync(trackingFile).toString()) : {};
+const trackingFile = join(redditDir, 'tracking.json');
+const trackingObj = existsAndHasContent(trackingFile) ? JSON.parse(readFileSync(trackingFile).toString()) : {};
 
 function fixStory(story: {
     id: string,
@@ -50,7 +50,7 @@ export class RedditUtil {
     }
     if (!trackingObj['done'].includes(postId)) {
       trackingObj['done'].push(postId);
-      fs.writeFileSync(trackingFile, JSON.stringify(trackingObj));
+      writeFileSync(trackingFile, JSON.stringify(trackingObj, null, '\t'));
     }
   }
   async getRandom() {
@@ -78,7 +78,7 @@ export class RedditUtil {
         allHotItems.push(...filteredHotItems);
       }
       if (allHotItems.length > 0) {
-        const randomHotItem = allHotItems[crypto.randomInt(0, allHotItems.length)];
+        const randomHotItem = allHotItems[randomInt(0, allHotItems.length)];
         return fixStory({
           id: randomHotItem.id,
           content: removeMarkdown(randomHotItem.selftext).trim(),

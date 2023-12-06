@@ -1,5 +1,5 @@
-import Path from 'path';
-import fs from 'fs';
+import { join } from 'path';
+import { createWriteStream, unlinkSync } from 'fs';
 import ytdl from 'ytdl-core';
 
 import { existsAndHasContent } from './fs';
@@ -9,13 +9,13 @@ import { MultiProgress } from './multi-progress';
 export async function download(url: string, toDir: string, MultiProgressBar: MultiProgress = undefined) {
   const urlInfo = await ytdl.getInfo(url);
   const urlID = urlInfo.videoDetails.videoId;
-  const urlFile = Path.join(toDir, `${urlID}.mp4`);
+  const urlFile = join(toDir, `${urlID}.mp4`);
   if (existsAndHasContent(urlFile)) {
     return urlFile;
   }
   const audioDownloadStream = ytdl(url, { quality: 'highestaudio' });
   const pipeAudioStream = audioDownloadStream.pipe(
-      fs.createWriteStream(`${urlFile}.audio.tmp`)
+      createWriteStream(`${urlFile}.audio.tmp`)
   );
     // const tracker = {
     //     audio: { downloaded: 0, total: 0},
@@ -30,7 +30,7 @@ export async function download(url: string, toDir: string, MultiProgressBar: Mul
   }
   const videoDownloadStream = ytdl(url, { quality: 'highestvideo' });
   const pipeVideoStream = videoDownloadStream.pipe(
-      fs.createWriteStream(`${urlFile}.video.tmp`)
+      createWriteStream(`${urlFile}.video.tmp`)
   );
   if (MultiProgressBar) {
     const videoBar = MultiProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube video...');
@@ -59,7 +59,7 @@ export async function download(url: string, toDir: string, MultiProgressBar: Mul
       MultiProgressBar,
       '🎥 Rendering Youtube video...'
   );
-  fs.unlinkSync(`${urlFile}.video.tmp`);
-  fs.unlinkSync(`${urlFile}.audio.tmp`);
+  unlinkSync(`${urlFile}.video.tmp`);
+  unlinkSync(`${urlFile}.audio.tmp`);
   return urlFile;
 }

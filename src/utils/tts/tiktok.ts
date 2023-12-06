@@ -1,6 +1,6 @@
-import fs from 'fs';
-import Path from 'path';
-import crypto from 'crypto';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { createHash } from 'crypto';
 import axios from 'axios';
 
 import { ttsDir } from '../dirs';
@@ -39,10 +39,10 @@ export class TikTokTTS {
   configHash: string;
   constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
-    this.configHash = crypto.createHash('md5').update(JSON.stringify(config)).digest('hex');
+    this.configHash = createHash('md5').update(JSON.stringify(config)).digest('hex');
   }
   async generate(text: string, MultiProgressBar: MultiProgress): Promise<Buffer> {
-    const hash = crypto.createHash('md5').update(this.configHash + text).digest('hex');
+    const hash = createHash('md5').update(this.configHash + text).digest('hex');
     const words = text.split(/\s/);
     const textParts = [];
     let currentPart = words[0];
@@ -59,13 +59,13 @@ export class TikTokTTS {
     const combineParts = [];
     let i = 1;
     for (const part of textParts) {
-      const partFile = Path.join(ttsDir, `${hash}-part-${i}.mp3`);
+      const partFile = join(ttsDir, `${hash}-part-${i}.mp3`);
       const partAudio = await callAPI(part, this.config.tts.tiktok_session_id, this.config.tts.voice);
-      fs.writeFileSync(partFile, partAudio);
+      writeFileSync(partFile, partAudio);
       combineParts.push(partFile);
       i++;
     }
-    const combinedFile = Path.join(ttsDir, `${hash}-combined.mp3`);
+    const combinedFile = join(ttsDir, `${hash}-combined.mp3`);
 
     await concatFiles({
       files: combineParts,
@@ -76,10 +76,10 @@ export class TikTokTTS {
       progressLabel: '🎵 Combining TTS parts...',
     });
     for (const combinePart of combineParts) {
-      fs.unlinkSync(combinePart);
+      unlinkSync(combinePart);
     }
-    const retBuffer = fs.readFileSync(combinedFile);
-    fs.unlinkSync(combinedFile);
+    const retBuffer = readFileSync(combinedFile);
+    unlinkSync(combinedFile);
     return retBuffer;
   }
 }
