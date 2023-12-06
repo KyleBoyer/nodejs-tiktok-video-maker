@@ -19,8 +19,9 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Logging/progress bar for AI reword/new story functions
  - Screenshot Reddit title function
  - Generate CONFIG.md explaining the settings (might be pointless if the web UI does this)
- - More TTS service options
- - More AI service options
+ - More background video / audio sources instead of JUST YouTube (open an issue to suggest a source)
+ - More TTS service options (open an issue to suggest a service)
+ - More AI service options (open an issue to suggest a service)
 
 
 ### Nice to have
