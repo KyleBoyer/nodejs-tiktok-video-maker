@@ -1,10 +1,11 @@
 import { validateConfig } from '../config';
+import { MultiProgress } from '../multi-progress';
 import { OpenAIUtil } from './openai';
 
 
 type AIClass = {
-  rewordStory: (originalStory: string) => Promise<string>
-  generateNewStory: () => Promise<{
+  rewordStory: (originalStory: string, MultiProgressBar: MultiProgress) => Promise<string>
+  generateNewStory: (MultiProgressBar: MultiProgress) => Promise<{
     content: string
     title: string
   }>
@@ -20,13 +21,13 @@ export class AIUtil {
     };
   }
 
-  async rewordStory(originalStory: string): Promise<string> {
-    return this.aiModules[this.config.story.ai_type].rewordStory(originalStory);
+  async rewordStory(originalStory: string, MultiProgressBar: MultiProgress): Promise<string> {
+    return this.aiModules[this.config.story.ai_type].rewordStory(originalStory, MultiProgressBar);
   }
-  async generateNewStory(): Promise<{
+  async generateNewStory(MultiProgressBar: MultiProgress): Promise<{
     content: string
     title: string
   }> {
-    return this.aiModules[this.config.story.ai_type].generateNewStory();
+    return this.aiModules[this.config.story.ai_type].generateNewStory(MultiProgressBar);
   }
 }

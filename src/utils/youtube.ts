@@ -23,6 +23,7 @@ export async function download(url: string, toDir: string, MultiProgressBar: Mul
     // };
   if (MultiProgressBar) {
     const audioBar = MultiProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube audio...');
+    audioBar.update(0);
     audioDownloadStream.on('progress', (_, downloaded, total) => {
       audioBar.update(downloaded / total);
     });
@@ -33,6 +34,7 @@ export async function download(url: string, toDir: string, MultiProgressBar: Mul
   );
   if (MultiProgressBar) {
     const videoBar = MultiProgressBar.newDefaultBarWithLabel('⬇️ Downloading YouTube video...');
+    videoBar.update(0);
     videoDownloadStream.on('progress', (_, downloaded, total) => {
       videoBar.update(downloaded / total);
     });

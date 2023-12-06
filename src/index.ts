@@ -143,15 +143,16 @@ async function main() {
       process.exit(1);
     }
   } else if (config.story.source == 'ai') {
-    story = await ai.generateNewStory();
+    story = await ai.generateNewStory(sharedMultiProgress);
   }
   if (config.story.ai_rewrite) {
-    story.content = await ai.rewordStory(story.content);
+    story.content = await ai.rewordStory(story.content, sharedMultiProgress);
   }
   story.content = await replacer.replace(story.content, config.replacements['text-and-audio']);
   story.title = await replacer.replace(story.title, config.replacements['text-and-audio']);
   const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
   const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
+  pb.update(0);
   const generateCaptionAndAudio = async (text: string) => {
     const hash = crypto.createHash('md5').update(configHash + text).digest('hex');
     const imageFile = Path.join(captionsDir, `${hash}.png`);

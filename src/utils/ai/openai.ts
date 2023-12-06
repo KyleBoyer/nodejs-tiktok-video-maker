@@ -6,6 +6,7 @@ import * as tiktoken from 'tiktoken';
 import { validateConfig } from '../config';
 import * as splitter from '../splitter';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { MultiProgress } from '../multi-progress';
 
 // sources
 // https://platform.openai.com/docs/deprecations/
@@ -85,7 +86,7 @@ export class OpenAIUtil {
     });
   }
 
-  async rewordStory(originalStory: string): Promise<string> {
+  async rewordStory(originalStory: string, MultiProgressBar: MultiProgress): Promise<string> {
     const MAX_RETRIES = this.config.story.openai_retries;
     const MAX_PART_REWORD_TOKENS = this.config.story.openai_rewrite_chunk_max_tokens;
     const rewriteLength = this.config.story.openai_rewrite_length;
@@ -110,6 +111,9 @@ export class OpenAIUtil {
       }
     }
     const rewrittenParts=[];
+    const rewordPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Rewriting story parts...', { total: MAX_RETRIES * partsSplitByTokens.length });
+    rewordPB.update(0);
+    let partIndex = 0;
     for (const partList of partsSplitByTokens) {
       const joinedPartList = partList.join(' ');
       const partChatHistory: Array<ChatCompletionMessageParam> = [
@@ -140,7 +144,9 @@ export class OpenAIUtil {
           console.error(err);
         }
         partRetryNum+=1;
+        rewordPB.tick(1);
       }
+      rewordPB.update(MAX_RETRIES * (partIndex + 1));
       if (!aiPartMessage) {
         if (this.config.story.openai_rewrite_retry_fail_on_error) {
           throw new Error('AI rewrite failed');
@@ -149,42 +155,46 @@ export class OpenAIUtil {
         }
       }
       rewrittenParts.push(aiPartMessage);
-      // Finalize story
-      const joinedRewrittenParts = rewrittenParts.join(' ');
-      const chatHistory: Array<ChatCompletionMessageParam> = [
-        {'role': 'system', 'content': 'The user will present you with a story. You must output the same story with any issues fixed, and possibly expand the story to be longer. Your goal is to output a story that can be read to an audience. This story must make sense and have a lot of cliffhangers, to keep the audience interested. Keep the same story details and possibly add more. Avoid using swear words and words that may not be allowed, like: gun, drug, shoot, kill, suicide, etc. Make your story about 5 minutes in spoken length.'},
-        {'role': 'user', 'content': 'I have a story for you to review. Your output will be published, so make sure to only output the story. Do NOT include any extra information in your response besides the story.'},
-        {'role': 'assistant', 'content': aiAssistantMessage},
-        {'role': 'user', 'content': joinedRewrittenParts},
-      ];
-      const joinedRewrittenPartsTokens = numTokensFromString(joinedRewrittenParts, modelName);
-      let aiMessage='';
-      let retryNum = 0;
-      while (retryNum <= MAX_RETRIES && numTokensFromString(aiMessage, modelName) < joinedRewrittenPartsTokens) {
-        try {
-          const aiResponse = await this.openai.chat.completions.create({
-            model: modelName,
-            messages: chatHistory,
-            temperature: 0.9, // very creative
-          });
-          const aiMessageUpdated = removeAIExtras(aiResponse.choices[0].message.content);
-          const oldTokens = numTokensFromString(aiMessage, modelName);
-          const newTokens = numTokensFromString(aiMessageUpdated, modelName);
-          if (newTokens > oldTokens && isValidAIResponse(aiMessageUpdated)) {
-            aiMessage = aiMessageUpdated;
-            chatHistory.push({'role': 'assistant', 'content': aiMessage});
-            chatHistory.push({'role': 'user', 'content': 'Make the story longer/more detailed'});
-          }
-        } catch (err) {
-          console.error(err);
-        }
-        retryNum+=1;
-      }
-      return aiMessage ? aiMessage : joinedRewrittenParts;
+      partIndex+=1;
     }
-    return originalStory;
+    // Finalize story
+    const joinedRewrittenParts = rewrittenParts.join(' ');
+    const chatHistory: Array<ChatCompletionMessageParam> = [
+      {'role': 'system', 'content': 'The user will present you with a story. You must output the same story with any issues fixed, and possibly expand the story to be longer. Your goal is to output a story that can be read to an audience. This story must make sense and have a lot of cliffhangers, to keep the audience interested. Keep the same story details and possibly add more. Avoid using swear words and words that may not be allowed, like: gun, drug, shoot, kill, suicide, etc. Make your story about 5 minutes in spoken length.'},
+      {'role': 'user', 'content': 'I have a story for you to review. Your output will be published, so make sure to only output the story. Do NOT include any extra information in your response besides the story.'},
+      {'role': 'assistant', 'content': aiAssistantMessage},
+      {'role': 'user', 'content': joinedRewrittenParts},
+    ];
+    const joinedRewrittenPartsTokens = numTokensFromString(joinedRewrittenParts, modelName);
+    let aiMessage='';
+    let retryNum = 0;
+    const finalizeStoryPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Finalizing rewritten story...', { total: MAX_RETRIES });
+    finalizeStoryPB.update(0);
+    while (retryNum <= MAX_RETRIES && numTokensFromString(aiMessage, modelName) < joinedRewrittenPartsTokens) {
+      try {
+        const aiResponse = await this.openai.chat.completions.create({
+          model: modelName,
+          messages: chatHistory,
+          temperature: 0.9, // very creative
+        });
+        const aiMessageUpdated = removeAIExtras(aiResponse.choices[0].message.content);
+        const oldTokens = numTokensFromString(aiMessage, modelName);
+        const newTokens = numTokensFromString(aiMessageUpdated, modelName);
+        if (newTokens > oldTokens && isValidAIResponse(aiMessageUpdated)) {
+          aiMessage = aiMessageUpdated;
+          chatHistory.push({'role': 'assistant', 'content': aiMessage});
+          chatHistory.push({'role': 'user', 'content': 'Make the story longer/more detailed'});
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      retryNum+=1;
+      finalizeStoryPB.tick(1);
+    }
+    finalizeStoryPB.update(MAX_RETRIES);
+    return aiMessage ? aiMessage : joinedRewrittenParts;
   }
-  async generateNewStory(): Promise<{
+  async generateNewStory(MultiProgressBar: MultiProgress): Promise<{
     content: string
     title: string
   }> {
@@ -206,6 +216,8 @@ export class OpenAIUtil {
     ];
     let createStoryAIMessage='';
     let createStoryRetryNum = 0;
+    const createStoryPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Generating new story...', { total: MAX_RETRIES });
+    createStoryPB.update(0);
     while (createStoryRetryNum <= MAX_RETRIES && createStoryAIMessage.length < desiredLength) {
       try {
         const aiResponse = await this.openai.chat.completions.create({
@@ -225,12 +237,14 @@ export class OpenAIUtil {
         console.error(err);
       }
       createStoryRetryNum+=1;
+      createStoryPB.tick(1);
     }
     if (!createStoryAIMessage) {
       throw new Error('OpenAI failed to create a story!');
     } else if (createStoryAIMessage.length < minLength) {
       throw new Error(`OpenAI failed to generate a story, that had at minimum ${minLength} characters!`);
     }
+    createStoryPB.update(MAX_RETRIES);
 
     const titleStoryChatHistory: Array<ChatCompletionMessageParam> = [
       {'role': 'system', 'content': 'The user will present you with an a story. You must create an attention grabbing title for that story. Your goal is to output a title that can be read to an audience. Make sure the title is very attention grabbing, as most viewers lose interest after 10 seconds. This title should get the audience interested. Avoid using swear words and words that may not be allowed, like: gun, drug, shoot, kill, suicide, etc.'},
@@ -240,6 +254,8 @@ export class OpenAIUtil {
     ];
     let titleStoryAIMessage='';
     let titleStoryRetryNum = 0;
+    const titleStoryPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Generating new story title...', { total: MAX_RETRIES });
+    titleStoryPB.update(0);
     while (titleStoryRetryNum <= MAX_RETRIES && titleStoryAIMessage.length < 5) {
       try {
         const aiResponse = await this.openai.chat.completions.create({
@@ -259,7 +275,9 @@ export class OpenAIUtil {
         console.error(err);
       }
       titleStoryRetryNum+=1;
+      titleStoryPB.tick(1);
     }
+    titleStoryPB.update(MAX_RETRIES);
     return {
       title: titleStoryAIMessage,
       content: createStoryAIMessage,
