@@ -36,12 +36,12 @@ export class RedditUtil {
   constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
     this.r = new Snoowrap({
-      userAgent: config.story.user_agent || 'nodejs-tiktok-video-maker',
-      clientId: config.story.client_id,
-      clientSecret: config.story.client_secret,
-      refreshToken: config.story.refresh_token,
-      username: config.story.username,
-      password: config.story.password,
+      userAgent: config.story.reddit_user_agent || 'nodejs-tiktok-video-maker',
+      clientId: config.story.reddit_client_id,
+      clientSecret: config.story.reddit_client_secret,
+      refreshToken: config.story.reddit_refresh_token,
+      username: config.story.reddit_username,
+      password: config.story.reddit_password,
     });
   }
   static markComplete(postId: string) {
@@ -54,13 +54,13 @@ export class RedditUtil {
     }
   }
   async getRandom() {
-    const subreddits = this.config.story.random_subreddits;
+    const subreddits = this.config.story.reddit_random_subreddits;
     const allHotItems = [];
     for (const time of ['hour', 'day', 'week', 'month', 'year', 'all']) {
       for (const subreddit of subreddits) {
         const subredditHotItems = await this.r.getTop(subreddit, {
           time: time as 'hour' | 'day' | 'week' | 'month' | 'year' | 'all',
-          limit: this.config.story.random_limit || 50,
+          limit: this.config.story.reddit_random_limit || 50,
         });
         const filteredHotItems = subredditHotItems.filter((s) => {
           const noMarkdownSelfText = removeMarkdown(s.selftext);
@@ -69,10 +69,10 @@ export class RedditUtil {
                         !isComplete(s.id) &&
                         !s.stickied &&
                         !s.is_video &&
-                        s.num_comments >= (this.config.story.random_min_comments || 0) &&
-                        (!s.over_18 || this.config.story.random_allow_nsfw) &&
-                        noMarkdownSelfText.length >= (this.config.story.random_min_length || 0) &&
-                        noMarkdownSelfText.length <= (this.config.story.random_max_length || Number.MAX_SAFE_INTEGER)
+                        s.num_comments >= (this.config.story.reddit_random_min_comments || 0) &&
+                        (!s.over_18 || this.config.story.reddit_random_allow_nsfw) &&
+                        noMarkdownSelfText.length >= (this.config.story.reddit_random_min_length || 0) &&
+                        noMarkdownSelfText.length <= (this.config.story.reddit_random_max_length || Number.MAX_SAFE_INTEGER)
           );
         });
         allHotItems.push(...filteredHotItems);

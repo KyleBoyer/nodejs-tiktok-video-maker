@@ -130,9 +130,9 @@ async function main() {
     id?: string,
   };
   if (config.story.source == 'reddit') {
-    if (config.story.post_id) {
-      story = await reddit.getPostInfo(config.story.post_id);
-    } else if (config.story.random) {
+    if (config.story.reddit_post_id) {
+      story = await reddit.getPostInfo(config.story.reddit_post_id);
+    } else if (config.story.reddit_random) {
       story = await reddit.getRandom();
       sharedMultiProgress.terminate();
       console.log(`🎲 Random story title: ${story.title}`);

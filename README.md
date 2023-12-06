@@ -16,7 +16,6 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `npm run start`
 
 ### TODO
- - AI new story function
  - Logging/progress bar for AI reword/new story functions
  - Screenshot Reddit title function
  - Generate CONFIG.md explaining the settings (might be pointless if the web UI does this)

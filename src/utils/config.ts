@@ -116,12 +116,17 @@ const configSchema = object({
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
     }),
-    openai_model: string().default('gpt-3.5-turbo').when(['source', 'ai_type', 'ai_rewrite'], {
+    openai_model: string().default('gpt-3.5-turbo-16k').when(['source', 'ai_type', 'ai_rewrite'], {
       is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
     }),
-    openai_rewrite_retries: number().default(5).when(['source', 'ai_type', 'ai_rewrite'], {
+    openai_new_story_desired_length: number().default(500).when(['source', 'ai_type'], {
+      is: (source: string, aiType: string) => aiType == 'openai' && source == 'ai',
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_retries: number().default(5).when(['source', 'ai_type', 'ai_rewrite'], {
       is: (source: string, aiType: string, aiRewrite: boolean) => aiType == 'openai' && (source == 'ai' || aiRewrite),
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
@@ -141,38 +146,38 @@ const configSchema = object({
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
     }),
-    prompt: string().when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    generated_min_length: number().default(500).when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    openai_new_story_prompt: string().when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    openai_new_story_min_length: number().default(10).when('source', { is: 'ai', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     // Reddit Specific
-    post_id: string().optional(),
-    client_id: string().when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    client_secret: string().when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    user_agent: string().default('nodejs-tiktok-video-maker'),
-    refresh_token: string().optional(),
-    username: string().optional(),
-    password: string().optional(),
+    reddit_post_id: string().optional(),
+    reddit_client_id: string().when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_client_secret: string().when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_user_agent: string().default('nodejs-tiktok-video-maker'),
+    reddit_refresh_token: string().optional(),
+    reddit_username: string().optional(),
+    reddit_password: string().optional(),
     ai_rewrite: boolean().default(false).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     screenshot_title: boolean()
         .when('ai_rewrite', { is: true, then: (s) => s.default(false), otherwise: (s) => s.default(true)})
         .when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    random: boolean().default(true).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_random: boolean().default(true).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     // Reddit Random Specific
-    random_limit: number().default(50)
-        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    random_subreddits: array().of(string())
-        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.min(1).required(), otherwise: (s) => s.optional()}),
-    random_min_comments: number().default(0)
-        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    random_max_length: number().default(Number.MAX_SAFE_INTEGER)
-        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    random_min_length: number().default(30)
-        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    random_allow_nsfw: boolean().default(false)
-        .when(['source', 'random'], { is: (source: string, random: boolean) => source == 'reddit' && random, then: (s) => s.required(), otherwise: (s) => s.optional()}),
-  }).test('story.refresh_token or (story.username and story.password)', 'story.refresh_token OR (story.username AND story.password) is required', (v) => {
-    return !!(!v.source || v.source != 'reddit' || (v.refresh_token || (v.username && v.password)));
-  }).test('story.post_id OR story.random', 'story.post_id OR story.random is required', (v) => {
-    return !!(!v.source || v.source != 'reddit' || (v.post_id || v.random));
+    reddit_random_limit: number().default(50)
+        .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_random_subreddits: array().of(string())
+        .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.min(1).required(), otherwise: (s) => s.optional()}),
+    reddit_random_min_comments: number().default(0)
+        .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_random_max_length: number().default(Number.MAX_SAFE_INTEGER)
+        .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_random_min_length: number().default(30)
+        .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_random_allow_nsfw: boolean().default(false)
+        .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+  }).test('story.reddit_refresh_token or (story.reddit_username and story.reddit_password)', 'story.reddit_refresh_token OR (story.reddit_username AND story.reddit_password) is required', (v) => {
+    return !!(!v.source || v.source != 'reddit' || (v.reddit_refresh_token || (v.reddit_username && v.reddit_password)));
+  }).test('story.reddit_post_id OR story.reddit_random', 'story.reddit_post_id OR story.reddit_random is required', (v) => {
+    return !!(!v.source || v.source != 'reddit' || (v.reddit_post_id || v.reddit_random));
   }),
   replacements: object({
     'text-and-audio': array().of(textReplacementSchema).default([]),
