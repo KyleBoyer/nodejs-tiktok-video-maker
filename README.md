@@ -23,9 +23,14 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - More TTS service options (open an issue to suggest a service)
  - More AI service options (open an issue to suggest a service)
 
-
 ### Nice to have
  - Translate story
- - Caption effects (grow/shrink/rotate/others)
+   - Google Translate
+   - OpenAI
+   - (open an issue to suggest a source)
+ - Caption effects
+   - grow / shrink
+   - rotate
+   - (open an issue to suggest other effects)
  - Web UI
  - Config file builder / helper (might be pointless if the web UI does this)
