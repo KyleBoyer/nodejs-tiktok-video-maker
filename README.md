@@ -16,6 +16,7 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `npm run start`
 
 ### TODO
+ - Asset folder/file for saving AI generated prompt/story/title
  - Screenshot Reddit title function
  - Generate CONFIG.md explaining the settings (might be pointless if the web UI does this)
  - More background video / audio sources instead of JUST YouTube (open an issue to suggest a source)
