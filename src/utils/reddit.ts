@@ -10,6 +10,7 @@ import { markdownToTxt as removeMarkdown } from 'markdown-to-txt';
 import { existsAndHasContent } from './fs';
 import { redditDir } from './dirs';
 import { validateConfig } from './config';
+import { replace } from './replacer';
 const trackingFile = join(redditDir, 'tracking.json');
 const trackingObj = existsAndHasContent(trackingFile) ? JSON.parse(readFileSync(trackingFile).toString()) : {};
 
@@ -120,7 +121,7 @@ export class RedditUtil {
     const isNSFW = await submission.over_18;
     const theme = this.config.story.reddit_screenshot_title_theme;
     const cookieFile = join(redditDir, `${theme}-theme-cookies.json`);
-    const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({headless: 'new'});
     browser.defaultBrowserContext().overridePermissions('https://www.reddit.com', ['notifications']);
     const browserPages = await browser.pages();
     const page = browserPages.length ? browserPages[0] : await browser.newPage();
@@ -226,8 +227,13 @@ export class RedditUtil {
     await page.evaluate(`
       document.querySelector(".header-user-dropdown > button").click()
     `);
-    // get aria-checked
-    // Removes the body of the post
+    // Replace text in data-adclicklocation="title"
+    const titleH1 = await page.$('[data-testid="post-container"] * [data-adclicklocation="title"] * h1');
+    const titleH1Content = await page.evaluate((el) => el.outerText, titleH1);
+    const updatedContent = await replace(await replace(titleH1Content, this.config.replacements['text-and-audio']), this.config.replacements['text-only']);
+    await page.evaluate(`
+      document.querySelector('[data-testid="post-container"] * [data-adclicklocation="title"] * h1').outerText = ${JSON.stringify(updatedContent)};
+    `);
     await Promise.allSettled([
       page.evaluate(
           "document.querySelector('[data-adclicklocation=\"media\"]').style.display = 'none'"
