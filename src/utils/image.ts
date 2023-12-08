@@ -10,6 +10,38 @@ export class ImageGenerator {
   constructor(config: ReturnType<typeof validateConfig>) {
     this.config = config;
   }
+  async resize(old: string | Buffer) {
+    const width = this.config.video.width;
+    const height = this.config.video.height;
+    const canvas = Canvas.createCanvas(width, height);
+    const context = canvas.getContext('2d');
+    // Set background color
+    context.fillStyle = this.config.captions.background;
+    context.fillRect(0, 0, width, height);
+    const oldImg = await Canvas.loadImage(old);
+
+    // Original dimensions
+    const origWidth = oldImg.width;
+    const origHeight = oldImg.height;
+
+    // Calculate maximum scaling factor
+    const scaleWidth = width / origWidth;
+    const scaleHeight = height / origHeight;
+    const scaleFactor = Math.min(scaleWidth, scaleHeight);
+
+    // Calculate scaled dimensions
+    const scaledWidth = origWidth * scaleFactor;
+    const scaledHeight = origHeight * scaleFactor;
+    context.drawImage(
+        oldImg,
+        ((width - scaledWidth) / 2),
+        ((height - scaledHeight) / 2),
+        scaledWidth,
+        scaledHeight
+    );
+    const buffer = canvas.toBuffer('image/png');
+    return buffer;
+  }
   fromText(text: string) {
     const width = this.config.video.width;
     const height = this.config.video.height;

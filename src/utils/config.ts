@@ -157,9 +157,10 @@ const configSchema = object({
     reddit_username: string().optional(),
     reddit_password: string().optional(),
     ai_rewrite: boolean().default(false).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
-    screenshot_title: boolean()
+    reddit_screenshot_title: boolean()
         .when('ai_rewrite', { is: true, then: (s) => s.default(false), otherwise: (s) => s.default(true)})
         .when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_screenshot_title_theme: string().oneOf(['dark', 'light']).default('dark').when('reddit_screenshot_title', { is: true, then: (s) => s.required(), otherwise: (s) => s.optional()}),
     reddit_random: boolean().default(true).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     // Reddit Random Specific
     reddit_random_limit: number().default(50)

@@ -153,9 +153,9 @@ async function main() {
   const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
   const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
   pb.update(0);
-  const generateCaptionAndAudio = async (text: string) => {
+  const generateCaptionAndAudio = async (text: string, overrideImage?: string) => {
     const hash = createHash('md5').update(configHash + text).digest('hex');
-    const imageFile = join(captionsDir, `${hash}.png`);
+    const imageFile = overrideImage || join(captionsDir, `${hash}.png`);
     const ttsFile = join(ttsDir, `${hash}.mp3`);
     const [replacedText, replacedAudio] = await Promise.all([
       replacer.replace(text, config.replacements['text-only']),
@@ -233,7 +233,16 @@ async function main() {
       return { imageFile, audioFile, ttsDuration };
     }
   };
-  const titleRenderings = await generateCaptionAndAudio(story.title);
+  let titleImage;
+  if (config.story.source == 'reddit' && config.story.reddit_screenshot_title) {
+    const titleScreenshotFile = join(captionsDir, `${story.id}-screenshot-${configHash}.png`);
+    if (!existsAndHasContent(titleScreenshotFile)) {
+      const imageData = await image.resize(await reddit.screenshotTitle(story.id));
+      writeFileSync(titleScreenshotFile, imageData);
+    }
+    titleImage = titleScreenshotFile;
+  }
+  const titleRenderings = await generateCaptionAndAudio(story.title, titleImage);
   const videoParts = [titleRenderings];
   const silenceAudioFile = join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.mp3`);
   const silenceVideoFile = join(ttsDir, `silence-${config.tts.extra_silence}-${configHash}.webm`);
