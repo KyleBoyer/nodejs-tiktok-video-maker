@@ -163,6 +163,7 @@ const configSchema = object({
     reddit_screenshot_title_theme: string().oneOf(['dark', 'light']).default('dark').when('reddit_screenshot_title', { is: true, then: (s) => s.required(), otherwise: (s) => s.optional()}),
     reddit_random: boolean().default(true).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     // Reddit Random Specific
+    reddit_random_ai_similarity: array().of(string()).default([]),
     reddit_random_limit: number().default(50)
         .when(['source', 'reddit_random'], { is: (source: string, redditRandom: boolean) => source == 'reddit' && redditRandom, then: (s) => s.required(), otherwise: (s) => s.optional()}),
     reddit_random_subreddits: array().of(string())

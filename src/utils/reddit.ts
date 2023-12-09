@@ -1,5 +1,10 @@
 import Snoowrap from 'snoowrap';
 import puppeteer, { ElementHandle } from 'puppeteer';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const similarity = require('sentence-similarity');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const similarityScore = require('similarity-score');
+
 
 import { join } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
@@ -82,6 +87,32 @@ export class RedditUtil {
         allHotItems.push(...filteredHotItems);
       }
       if (allHotItems.length > 0) {
+        if (Array.isArray(this.config.story.reddit_random_ai_similarity) && this.config.story.reddit_random_ai_similarity.length) {
+          type SubmissionWithSimilarity = Snoowrap.Submission & {
+            similarity_score?: number
+          }
+          const winkOpts = { f: similarityScore.winklerMetaphone, options: {threshold: 0} };
+          let foundScoreGreaterThanZero = false;
+          for (let i = 0; i < allHotItems.length; i++) {
+            const { score } = similarity(this.config.story.reddit_random_ai_similarity, (allHotItems[i].title + ' ' + allHotItems[i].selftext).split(' '), winkOpts);
+            (allHotItems[i] as SubmissionWithSimilarity).similarity_score = score;
+            foundScoreGreaterThanZero = foundScoreGreaterThanZero || score > 0;
+          }
+          if (foundScoreGreaterThanZero) {
+            const sortedAllHotItems = allHotItems.sort((a, b) => {
+              const aScore = (a as SubmissionWithSimilarity).similarity_score;
+              const bScore = (b as SubmissionWithSimilarity).similarity_score;
+              return bScore - aScore;
+            });
+            const mostSimilarItem = sortedAllHotItems[0];
+            return fixStory({
+              id: mostSimilarItem.id,
+              content: removeMarkdown(mostSimilarItem.selftext).trim(),
+              title: mostSimilarItem.title,
+              subreddit: mostSimilarItem.subreddit.display_name,
+            });
+          }
+        }
         const randomHotItem = allHotItems[randomInt(0, allHotItems.length)];
         return fixStory({
           id: randomHotItem.id,
