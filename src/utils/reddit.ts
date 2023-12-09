@@ -1,10 +1,10 @@
 import Snoowrap from 'snoowrap';
 import puppeteer, { ElementHandle } from 'puppeteer';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const similarity = require('sentence-similarity');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const similarityScore = require('similarity-score');
 
+import winkNLP, { Bow } from 'wink-nlp';
+import model from 'wink-eng-lite-web-model';
+const wink = winkNLP(model);
+import similarity from 'wink-nlp/utilities/similarity';
 
 import { join } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
@@ -91,10 +91,13 @@ export class RedditUtil {
           type SubmissionWithSimilarity = Snoowrap.Submission & {
             similarity_score?: number
           }
-          const winkOpts = { f: similarityScore.winklerMetaphone, options: {threshold: 0} };
           let foundScoreGreaterThanZero = false;
           for (let i = 0; i < allHotItems.length; i++) {
-            const { score } = similarity(this.config.story.reddit_random_ai_similarity, (allHotItems[i].title + ' ' + allHotItems[i].selftext).split(' '), winkOpts);
+            const hotItemDoc = wink.readDoc(allHotItems[i].title + ' ' + allHotItems[i].selftext);
+            const hotItemBow = hotItemDoc.tokens().out(wink.its.value, wink.as.bow) as Bow;
+            const keywordsDoc = wink.readDoc(this.config.story.reddit_random_ai_similarity.join(' '));
+            const keywordsBow = keywordsDoc.tokens().out(wink.its.value, wink.as.bow) as Bow;
+            const score = similarity.bow.cosine(keywordsBow, hotItemBow);
             (allHotItems[i] as SubmissionWithSimilarity).similarity_score = score;
             foundScoreGreaterThanZero = foundScoreGreaterThanZero || score > 0;
           }
