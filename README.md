@@ -16,6 +16,7 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `npm run start`
 
 ### TODO
+ - Reddit random post NLP/AI similarity config
  - Generate CONFIG.md explaining the settings (might be pointless if the web UI does this)
  - More background video / audio sources instead of JUST YouTube (open an issue to suggest a source)
  - More TTS service options (open an issue to suggest a service)
