@@ -227,8 +227,8 @@ export class RedditUtil {
     if (page.url() != submissionURL) {
       await page.goto(submissionURL);
     }
-    const padWidth = Math.max(this.config.video.height, this.config.video.width) == this.config.video.width ? (this.config.captions.padding.width * 2) : 0;
-    const padHeight = Math.max(this.config.video.height, this.config.video.width) == this.config.video.height ? (this.config.captions.padding.height * 2) : 0;
+    const padWidth = this.config.captions.padding.width * 2;
+    const padHeight = this.config.captions.padding.height * 2;
     await page.setViewport({
       width: (this.config.video.width - padWidth),
       height: (this.config.video.height - padHeight),

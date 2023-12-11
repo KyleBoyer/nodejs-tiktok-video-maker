@@ -25,9 +25,9 @@ export class ImageGenerator {
     const origHeight = oldImg.height;
 
     // Calculate maximum scaling factor
-    const padWidth = Math.max(origHeight, origWidth) == origWidth ? (this.config.captions.padding.width * 2) : 0;
+    const padWidth = this.config.captions.padding.width * 2;
+    const padHeight = this.config.captions.padding.height * 2;
     const scaleWidth = (width - padWidth) / origWidth;
-    const padHeight = Math.max(origHeight, origWidth) == origHeight ? (this.config.captions.padding.height * 2) : 0;
     const scaleHeight = (height - padHeight) / origHeight;
     const scaleFactor = Math.min(scaleWidth, scaleHeight);
 
@@ -88,7 +88,7 @@ export class ImageGenerator {
     lines.push(currentLine);
 
     // Drawing text
-    const lineHeight = maxHeight + this.config.captions.padding.height; // Adjust line height as needed
+    const lineHeight = maxHeight + this.config.captions.padding.between_lines; // Adjust line height as needed
     const startingY = height / 2 - (lines.length * lineHeight) / 2;
 
     for (let i = 0; i < lines.length; i++) {

@@ -32,7 +32,8 @@ const configSchema = object({
   captions: object({
     nlp_splitter: string().oneOf(['compromise', 'wink', 'natural']).default('compromise'),
     padding: object({
-      height: number().default(10),
+      height: number().default(200),
+      between_lines: number().default(10),
       width: number().default(200),
     }),
     background: string().default('rgba(0, 0, 0, 0)'),
