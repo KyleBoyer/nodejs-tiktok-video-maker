@@ -227,9 +227,11 @@ export class RedditUtil {
     if (page.url() != submissionURL) {
       await page.goto(submissionURL);
     }
+    const padWidth = Math.max(this.config.video.height, this.config.video.width) == this.config.video.width ? (this.config.captions.padding.width * 2) : 0;
+    const padHeight = Math.max(this.config.video.height, this.config.video.width) == this.config.video.height ? (this.config.captions.padding.height * 2) : 0;
     await page.setViewport({
-      width: (this.config.video.width - (this.config.captions.padding.width*2)),
-      height: (this.config.video.height - (this.config.captions.padding.height*2)),
+      width: (this.config.video.width - padWidth),
+      height: (this.config.video.height - padHeight),
       deviceScaleFactor: 3,
     });
     await page.waitForSelector('[data-test-id="post-content"]');
