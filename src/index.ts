@@ -4,6 +4,10 @@ import { readFileSync, writeFileSync, rmSync } from 'fs';
 import { createHash, randomInt } from 'crypto';
 import { join } from 'path';
 import * as exponential from 'exponential-backoff';
+// const exponential = {
+//   backOff: (fn: any, opts: any) => fn(opts),
+// };
+// const backoffSettings = {};
 const backoffSettings: Partial<exponential.IBackOffOptions> = {
   jitter: 'full',
   startingDelay: 1000,
@@ -488,8 +492,11 @@ async function main() {
   if (config.video.accurate_render_method) {
     // finalVideoCmd = finalVideoCmd.outputOptions(['-pix_fmt yuva420p']).withVideoCodec('libvpx-vp9')
     overlayFilters.push({
+      filter: 'setpts', options: 'PTS-STARTPTS', inputs: '[0:v]', outputs: 'pts-fixed-tts',
+    });
+    overlayFilters.push({
       filter: 'scale2ref',
-      inputs: '[0:v][tmp]',
+      inputs: '[pts-fixed-tts][tmp]',
       outputs: '[scaled-tts][tmp]', // possible change tmp to throwaway
       options: {
         w: 'iw',
