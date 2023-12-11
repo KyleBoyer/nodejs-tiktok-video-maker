@@ -31,7 +31,7 @@ const configSchema = object({
   }),
   captions: object({
     nlp_splitter: string().oneOf(['compromise', 'wink', 'natural']).default('compromise'),
-    line_padding: object({
+    padding: object({
       height: number().default(10),
       width: number().default(200),
     }),
@@ -78,7 +78,16 @@ const configSchema = object({
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
     }),
-    openai_model: string().default('tts-1-hd').when('source', {
+    openai_model: string().default('tts-1').when('source', {
+      is: 'openai',
+      then: (s) => s.required(),
+      otherwise: (s) => s.optional(),
+    }),
+    openai_tts_rpm: number().required().when('openai_model', {
+      is: 'tts-1-hd',
+      then: (s) => s.default(3),
+      otherwise: (s) => s.default(50),
+    }).when('source', {
       is: 'openai',
       then: (s) => s.required(),
       otherwise: (s) => s.optional(),
