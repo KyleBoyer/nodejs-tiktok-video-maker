@@ -155,7 +155,9 @@ export class RedditUtil {
     const isNSFW = await submission.over_18;
     const theme = this.config.story.reddit_screenshot_title_theme;
     const cookieFile = join(redditDir, `${theme}-theme-cookies.json`);
-    const browser = await puppeteer.launch({headless: 'new'});
+    const browser = await puppeteer.launch({
+      headless: 'new',
+    });
     browser.defaultBrowserContext().overridePermissions('https://www.reddit.com', ['notifications']);
     const browserPages = await browser.pages();
     const page = browserPages.length ? browserPages[0] : await browser.newPage();
@@ -230,8 +232,8 @@ export class RedditUtil {
     const padWidth = this.config.captions.padding.width * 2;
     const padHeight = this.config.captions.padding.height * 2;
     await page.setViewport({
-      width: (this.config.video.width - padWidth),
-      height: (this.config.video.height - padHeight),
+      width: (this.config.video.width - padWidth) / this.config.story.reddit_screenshot_title_zoom,
+      height: (this.config.video.height - padHeight) / this.config.story.reddit_screenshot_title_zoom,
       deviceScaleFactor: 3,
     });
     await page.waitForSelector('[data-test-id="post-content"]');

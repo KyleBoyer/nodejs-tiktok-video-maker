@@ -171,6 +171,7 @@ const configSchema = object({
         .when('ai_rewrite', { is: true, then: (s) => s.default(false), otherwise: (s) => s.default(true)})
         .when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     reddit_screenshot_title_theme: string().oneOf(['dark', 'light']).default('dark').when('reddit_screenshot_title', { is: true, then: (s) => s.required(), otherwise: (s) => s.optional()}),
+    reddit_screenshot_title_zoom: number().default(2.0).when('reddit_screenshot_title', { is: true, then: (s) => s.required(), otherwise: (s) => s.optional()}),
     reddit_random: boolean().default(true).when('source', { is: 'reddit', then: (s) => s.required(), otherwise: (s) => s.optional()}),
     // Reddit Random Specific
     reddit_random_ai_similarity: array().of(string()).default([]),
