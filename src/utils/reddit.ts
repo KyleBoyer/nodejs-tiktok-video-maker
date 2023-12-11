@@ -227,7 +227,11 @@ export class RedditUtil {
     if (page.url() != submissionURL) {
       await page.goto(submissionURL);
     }
-    await page.setViewport({width: this.config.video.width, height: this.config.video.height, deviceScaleFactor: 3});
+    await page.setViewport({
+      width: (this.config.video.width - (this.config.captions.padding.width*2)),
+      height: (this.config.video.height - (this.config.captions.padding.height*2)),
+      deviceScaleFactor: 3,
+    });
     await page.waitForSelector('[data-test-id="post-content"]');
     const nsfwApprovalButton = await page.$x('//h3[text()="You must be 18+ to view this community"]/parent::*//button[text()="Yes"]');
     if (Array.isArray(nsfwApprovalButton) && nsfwApprovalButton.length && await nsfwApprovalButton[0].isVisible()) {
