@@ -154,7 +154,7 @@ async function main() {
   }
   story.content = await replacer.replace(story.content, config.replacements['text-and-audio']);
   story.title = await replacer.replace(story.title, config.replacements['text-and-audio']);
-  const splits = await splitter.split(story.content.replace('\n', ' '), config.captions.nlp_splitter);
+  const splits = await splitter.split(story.content.split(/\s+/).join(' '), config.captions.nlp_splitter);
   const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
   pb.update(0);
   const generateCaptionAndAudio = async (text: string, overrideImage?: string) => {
@@ -169,7 +169,7 @@ async function main() {
     const ttsFileAlreadyExists = existsAndHasContent(ttsFile);
     const imagePromiseFn = imageAlreadyExists ?
             () => Promise.resolve(Buffer.from([])) :
-            () => Promise.resolve(image.fromText(replacedText.split('\n').join(' ')));
+            () => Promise.resolve(image.fromText(replacedText.split(/\s+/).join(' ')));
     const ttsPromiseFn = ttsFileAlreadyExists ?
             () => Promise.resolve(Buffer.from([])) :
             () => tts.generate(replacedAudio, sharedMultiProgress);
