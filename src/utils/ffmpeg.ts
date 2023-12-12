@@ -27,9 +27,12 @@ export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBa
         .on('start', (ffmpegCLICommand) => {
           cmd = ffmpegCLICommand;
         })
-        .on('error', (err) => {
+        .on('error', (err, stdout, stderr) => {
           clearTimeout(barStartTimer);
-          reject(err);
+          const newErr: Error & { original_error?: Error } = new Error(`FFMPEG Error: ${JSON.stringify({ stdout, stderr })}`);
+          newErr.original_error = err;
+          newErr.stack = newErr.stack.split('\n').slice(0, 2).join('\n') + '\n' + err.stack;
+          reject(newErr);
         })
         .on('end', (stdout, stderr) => {
           clearTimeout(barStartTimer);
@@ -56,8 +59,11 @@ export async function getDuration(file: string, MultiProgressBar: MultiProgress,
           .input(file)
           .outputOptions(['-f null', `-progress ${progressFile}`, `-threads ${cpus().length}`])
           .output('/dev/null')
-          .on('error', (err) => {
+          .on('error', (err, stdout, stderr) => {
             clearTimeout(barStartTimer);
+            const newErr: Error & { original_error?: Error } = new Error(`FFMPEG Error: ${JSON.stringify({ stdout, stderr })}`);
+            newErr.original_error = err;
+            newErr.stack = newErr.stack.split('\n').slice(0, 2).join('\n') + '\n' + err.stack;
             reject(err);
           })
           .on('progress', (progress) => {

@@ -85,15 +85,26 @@ async function main() {
   const audioFile = await exponential.backOff(() => youtube.download(config.audio.url, youtubeDir, sharedMultiProgress), backoffSettings);
   const audioOnlyFile = `${audioFile.split('.').slice(0, -1).join('.')}.mp3`;
   if (!existsAndHasContent(audioOnlyFile)) {
-    await runAutoProgress(
-        ffmpeg()
-            .input(audioFile)
-            .withNoVideo()
-        // .withAudioCodec('copy')
-            .output(audioOnlyFile),
-        sharedMultiProgress,
-        '🎵 Extracting audio from video...'
-    );
+    try {
+      await runAutoProgress(
+          ffmpeg()
+              .input(audioFile)
+              .withNoVideo()
+              .withAudioCodec('copy')
+              .output(audioOnlyFile),
+          sharedMultiProgress,
+          '🎵 Extracting audio from video...'
+      );
+    } catch (err) { // not stream-copyable, needs to re-encode
+      await runAutoProgress(
+          ffmpeg()
+              .input(audioFile)
+              .withNoVideo()
+              .output(audioOnlyFile),
+          sharedMultiProgress,
+          '🎵 Extracting audio from video...'
+      );
+    }
   }
   let useAudioFile = audioOnlyFile;
   if (config.audio.speed != 1 || config.audio.volume != 1) {
