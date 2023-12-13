@@ -7,7 +7,7 @@ import { ProgressBar } from './progress';
 import { existsAndHasContent } from './fs';
 import { createHash } from 'crypto';
 
-export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBar: MultiProgress, label='🎥 Rendering...', appearAfter=1500) {
+export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBar: MultiProgress, label='🎥 Rendering...', appearAfter=2500) {
   let bar: ProgressBar;
   let preBarProgress = 0;
   return new Promise((resolve, reject) => {
