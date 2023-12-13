@@ -4,6 +4,7 @@ import { fileSync } from 'tmp';
 import ffmpeg from 'fluent-ffmpeg';
 import { MultiProgress } from './multi-progress';
 import { ProgressBar } from './progress';
+import { existsAndHasContent } from './fs';
 
 export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBar: MultiProgress, label='🎥 Rendering...', appearAfter=1500) {
   let bar: ProgressBar;
@@ -46,6 +47,10 @@ export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBa
 }
 
 export async function getDuration(file: string, MultiProgressBar: MultiProgress, accurate=false, progressLabel='⏳ Calculating duration...', appearAfter=1500): Promise<number> { // Accurate=true takes much longer
+  const alreadyCalculatedDurationFile = `${file}.duration`;
+  if (existsAndHasContent(alreadyCalculatedDurationFile)) {
+    return +JSON.parse(readFileSync(alreadyCalculatedDurationFile).toString());
+  }
   if (accurate) {
     let bar: ProgressBar;
     let preBarProgress = 0;
@@ -84,7 +89,9 @@ export async function getDuration(file: string, MultiProgressBar: MultiProgress,
             if (progressLines.length) {
               const lastOutMS = progressLines.pop();
               const ms = +lastOutMS.split('=').pop().trim();
-              resolve(ms / 1000000);
+              const finalResult = ms / 1000000;
+              writeFileSync(alreadyCalculatedDurationFile, JSON.stringify(finalResult));
+              resolve(finalResult);
             } else {
               resolve(null);
             }
