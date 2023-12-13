@@ -1,10 +1,11 @@
 import { cpus } from 'os';
-import { readFileSync, unlinkSync, copyFileSync, writeFileSync } from 'fs';
+import { readFileSync, unlinkSync, copyFileSync, writeFileSync, createReadStream } from 'fs';
 import { fileSync } from 'tmp';
 import ffmpeg from 'fluent-ffmpeg';
 import { MultiProgress } from './multi-progress';
 import { ProgressBar } from './progress';
 import { existsAndHasContent } from './fs';
+import { createHash } from 'crypto';
 
 export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBar: MultiProgress, label='🎥 Rendering...', appearAfter=1500) {
   let bar: ProgressBar;
@@ -45,11 +46,23 @@ export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBa
         .run();
   });
 }
-
+function checksumFile(hashName: string, path: string): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const hash = createHash(hashName);
+    const stream = createReadStream(path);
+    stream.on('error', (err) => reject(err));
+    stream.on('data', (chunk) => hash.update(chunk));
+    stream.on('end', () => resolve(hash.digest('hex')));
+  });
+}
 export async function getDuration(file: string, MultiProgressBar: MultiProgress, accurate=false, progressLabel='⏳ Calculating duration...', appearAfter=1500): Promise<number> { // Accurate=true takes much longer
-  const alreadyCalculatedDurationFile = `${file}.duration`;
+  const fileHash = await checksumFile('sha1', file);
+  const alreadyCalculatedDurationFile = `${file}.duration.json`;
   if (existsAndHasContent(alreadyCalculatedDurationFile)) {
-    return +JSON.parse(readFileSync(alreadyCalculatedDurationFile).toString());
+    const parsedAlreadyCalculatedDurationJSON = JSON.parse(readFileSync(alreadyCalculatedDurationFile).toString());
+    if (parsedAlreadyCalculatedDurationJSON.fileHash.toString() === fileHash.toString()) {
+      return parsedAlreadyCalculatedDurationJSON.duration;
+    }
   }
   if (accurate) {
     let bar: ProgressBar;
@@ -90,7 +103,7 @@ export async function getDuration(file: string, MultiProgressBar: MultiProgress,
               const lastOutMS = progressLines.pop();
               const ms = +lastOutMS.split('=').pop().trim();
               const finalResult = ms / 1000000;
-              writeFileSync(alreadyCalculatedDurationFile, JSON.stringify(finalResult));
+              writeFileSync(alreadyCalculatedDurationFile, JSON.stringify({fileHash, duration: finalResult}));
               resolve(finalResult);
             } else {
               resolve(null);
