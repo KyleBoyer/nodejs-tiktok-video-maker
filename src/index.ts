@@ -15,6 +15,7 @@ const backoffSettings: Partial<exponential.IBackOffOptions> = {
 };
 
 import * as youtube from './utils/youtube';
+import * as bensound from './utils/bensound';
 import { RedditUtil } from './utils/reddit';
 import { AIUtil } from './utils/ai';
 import { TTSUtil } from './utils/tts';
@@ -31,7 +32,7 @@ const reddit = new RedditUtil(config);
 const tts = new TTSUtil(config);
 const ai = new AIUtil(config);
 
-import { youtubeDir, captionsDir, ttsDir, outputDir, aiDir } from './utils/dirs';
+import { youtubeDir, captionsDir, ttsDir, outputDir, aiDir, bensoundDir } from './utils/dirs';
 import { runAutoProgress, getDuration, ffmpeg, concatFiles } from './utils/ffmpeg';
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const prettyMsPromise = dynamicImport('pretty-ms');
@@ -82,7 +83,13 @@ async function main() {
     }
     useVideoFile = videoSpeedVolumeChangedFile;
   }
-  const audioFile = await exponential.backOff(() => youtube.download(config.audio.url, youtubeDir, sharedMultiProgress), backoffSettings);
+  const audioFile = await exponential.backOff(() => {
+    if (config.audio.url.includes('bensound')) {
+      return bensound.download(config.audio.url, bensoundDir, sharedMultiProgress);
+    } else {
+      return youtube.download(config.audio.url, youtubeDir, sharedMultiProgress);
+    }
+  }, backoffSettings);
   const audioOnlyFile = `${audioFile.split('.').slice(0, -1).join('.')}.mp3`;
   if (!existsAndHasContent(audioOnlyFile)) {
     try {
