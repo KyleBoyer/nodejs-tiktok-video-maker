@@ -25,7 +25,8 @@ const audioSchema = object({
 
 const configSchema = object({
   cleanup: object({
-    youtube: boolean().default(false),
+    background_audio: boolean().default(false),
+    background_video: boolean().default(false),
     tts: boolean().default(true),
     captions: boolean().default(true),
   }),

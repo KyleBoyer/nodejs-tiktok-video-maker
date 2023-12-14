@@ -16,6 +16,7 @@ const backoffSettings: Partial<exponential.IBackOffOptions> = {
 
 import * as youtube from './utils/youtube';
 import * as bensound from './utils/bensound';
+import * as soundstripe from './utils/soundstripe';
 import { RedditUtil } from './utils/reddit';
 import { AIUtil } from './utils/ai';
 import { TTSUtil } from './utils/tts';
@@ -32,14 +33,14 @@ const reddit = new RedditUtil(config);
 const tts = new TTSUtil(config);
 const ai = new AIUtil(config);
 
-import { youtubeDir, captionsDir, ttsDir, outputDir, aiDir, bensoundDir } from './utils/dirs';
+import { backgroundAudioDir, backgroundVideoDir, captionsDir, ttsDir, outputDir, aiDir } from './utils/dirs';
 import { runAutoProgress, getDuration, ffmpeg, concatFiles } from './utils/ffmpeg';
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const prettyMsPromise = dynamicImport('pretty-ms');
 
 async function main() {
   const { default: prettyMilliseconds } = await prettyMsPromise;
-  const videoFile = await exponential.backOff(() => youtube.download(config.video.url, youtubeDir, sharedMultiProgress), backoffSettings);
+  const videoFile = await exponential.backOff(() => youtube.download(config.video.url, backgroundVideoDir, sharedMultiProgress), backoffSettings);
   let useVideoFile = videoFile;
   if (config.video.speed != 1 || config.video.volume != 1) {
     let ffmpegCmd = ffmpeg()
@@ -85,9 +86,11 @@ async function main() {
   }
   const audioFile = await exponential.backOff(() => {
     if (config.audio.url.includes('bensound')) {
-      return bensound.download(config.audio.url, bensoundDir, sharedMultiProgress);
+      return bensound.download(config.audio.url, backgroundAudioDir, sharedMultiProgress);
+    } else if (config.audio.url.includes('soundstripe')) {
+      return soundstripe.download(config.audio.url, backgroundAudioDir, sharedMultiProgress);
     } else {
-      return youtube.download(config.audio.url, youtubeDir, sharedMultiProgress);
+      return youtube.download(config.audio.url, backgroundAudioDir, sharedMultiProgress);
     }
   }, backoffSettings);
   const audioOnlyFile = `${audioFile.split('.').slice(0, -1).join('.')}.mp3`;
@@ -589,8 +592,11 @@ async function main() {
     newJson.push({ epoch: (new Date()).valueOf(), prompt: config.story.openai_new_story_prompt, title: story.title, content: story.content });
     writeFileSync(aiTrackingFile, JSON.stringify(newJson, null, '\t'));
   }
-  if (config.cleanup.youtube) {
-    rmSync(youtubeDir, { recursive: true, force: true });
+  if (config.cleanup.background_audio) {
+    rmSync(backgroundAudioDir, { recursive: true, force: true });
+  }
+  if (config.cleanup.background_video) {
+    rmSync(backgroundVideoDir, { recursive: true, force: true });
   }
   if (config.cleanup.tts) {
     rmSync(ttsDir, { recursive: true, force: true });
