@@ -10,7 +10,18 @@ export async function download(url: string, toDir: string, MultiProgressBar: Mul
   const soundId = url.split('/songs/').pop().split('/').shift();
   const infoResponse = await axios.get(`https://api.soundstripe.com/app/songs/${soundId}`);
   const infoResponseJSON = infoResponse.data;
-  const mp3URL = infoResponseJSON.included.find((i: any)=>i.attributes.primary).attributes.file.versions.mp3.url;
+  const mp3URL = infoResponseJSON.included.find((i: {
+    attributes: {
+      primary: boolean
+      file: {
+        versions: {
+          mp3: {
+            url: string
+          }
+        }
+      }
+    }
+  })=>i.attributes.primary).attributes.file.versions.mp3.url;
   const mp3Filename = join(toDir, mp3URL.split('/').pop().split('?').shift());
   if (existsAndHasContent(mp3Filename)) {
     return mp3Filename;
