@@ -35,15 +35,11 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
       const netServer = createNetServer((socket) => {
         socket.once('data', (data) => {
           socket.pause();
+          socket.unshift(data);
           // A TLS handshake record starts with byte 22.
           const isTLS = (data[0] === 22);
-          if (isTLS) {
-            socket.unshift(data);
-            httpsServer.emit('connection', socket);
-          } else {
-            socket.unshift(data);
-            httpServer.emit('connection', socket);
-          }
+          const serverToUse = isTLS ? httpsServer : httpServer;
+          serverToUse.emit('connection', socket);
           process.nextTick(() => socket.resume());
         });
       });
