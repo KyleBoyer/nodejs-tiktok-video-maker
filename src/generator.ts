@@ -25,7 +25,7 @@ import * as replacer from './utils/replacer';
 import { ImageGenerator } from './utils/image';
 import { generateValidFilename, existsAndHasContent } from './utils/fs';
 
-import { validateConfig } from './utils/config';
+import { loadConfig, validateConfig } from './utils/config';
 
 import { backgroundAudioDir, backgroundVideoDir, captionsDir, ttsDir, outputDir, aiDir } from './utils/dirs';
 import { runAutoProgress, getDuration, ffmpeg, concatFiles } from './utils/ffmpeg';
@@ -605,4 +605,7 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
   }
   sharedMultiProgress.terminate();
   console.log(`Video has been output to: ${finalVideoFile}`);
+}
+if (require.main === module) {
+  generateVideo(loadConfig());
 }
