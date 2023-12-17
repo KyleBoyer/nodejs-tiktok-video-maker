@@ -1,4 +1,5 @@
 import { generateVideo } from './generator';
+import { startServer } from './gui';
 import { loadConfig } from './utils/config';
 import { Command } from 'commander';
 const program = new Command();
@@ -17,7 +18,7 @@ program
     .option('--ssl-cert <file>', 'Public certificate to use with the SSL server')
     .option('--no-https-redirect', 'Disable the https redirection when running an SSL server')
     .action((options) => {
-      console.log(options);
+      return startServer(options.port, options.ssl, options.httpsRedirect, options.sslKey, options.sslCert);
     });
 
 program
