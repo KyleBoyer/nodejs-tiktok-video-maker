@@ -15,6 +15,7 @@
     "bottleneck": "^2.19.5",
     "canvas": "^2.11.2",
     "colors": "^1.4.0",
+    "commander": "^11.1.0",
     "compromise": "^14.10.1",
     "emoji-regex": "^10.3.0",
     "escape-string-regexp": "^5.0.0",
