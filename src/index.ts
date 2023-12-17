@@ -11,9 +11,13 @@ program
 program
     .command('server')
     .description('Start the GUI')
-    .option('-p, --port <number>', 'Port number to start the server on', parseInt, 8080)
-    .action((...args) => {
-      console.log(args);
+    .option('-p, --port <number>', 'Port number to start the server on', parseInt, 8443)
+    .option('--ssl <true|false>', 'Start the server using SSL. Uses a self-signed localhost certificate if --ssl-key and --ssl-cert are not provided.', ((s) => ['1', 't', 'y'].includes(s[0].toLowerCase())), true)
+    .option('--ssl-key <file>', 'Private key to use with the SSL server')
+    .option('--ssl-cert <file>', 'Public certificate to use with the SSL server')
+    .option('--no-https-redirect', 'Disable the https redirection when running an SSL server')
+    .action((options) => {
+      console.log(options);
     });
 
 program
