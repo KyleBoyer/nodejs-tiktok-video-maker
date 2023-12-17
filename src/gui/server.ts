@@ -44,11 +44,10 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
         });
       });
       await new Promise<void>((resolve) => netServer.listen(port, '0.0.0.0', () => resolve()));
-      console.log(`🚀 Secure server started on port ${port}!`);
     } else {
       await new Promise<void>((resolve) => httpsServer.listen(port, '0.0.0.0', () => resolve()));
-      console.log(`🚀 Secure server started on port ${port}!`);
     }
+    console.log(`🚀 Secure server started on port ${port}!`);
   } else {
     await new Promise<void>((resolve) => app.listen(port, '0.0.0.0', () => resolve()));
     console.log(`🚀 Server started on port ${port}!`);
