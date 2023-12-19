@@ -1,0 +1,123 @@
+<div class="form-container">
+    <!-- Progress Step Bar -->
+    <div class="progress-bar">
+        <div class="progress-line"></div>
+        <div class="step-indicator" id="indicator1">
+            <div class="number">1</div>
+            <div class="label">Video</div>
+        </div>
+        <div class="step-indicator" id="indicator2">
+            <div class="number">2</div>
+            <div class="label">Audio</div>
+        </div>
+        <div class="step-indicator" id="indicator3">
+            <div class="number">3</div>
+            <div class="label">Story</div>
+        </div>
+        <div class="step-indicator" id="indicator4">
+            <div class="number">4</div>
+            <div class="label">Other</div>
+        </div>
+    </div>
+
+    <form id="multiStepForm">
+        <!-- Step 1 -->
+        <div class="step" id="step1">
+            <h2>Step 1</h2>
+            <p><label>Background Video URL: <input type="text" name="video.url" required></label></p>
+            <p><label>Speed: <input type="text" name="video.url" required></label></p>
+            <p><label>Volume: <input type="text" name="video.url" required></label></p>
+            <p><label>Resizer: <input type="text" name="video.url" required></label></p>
+            <p><label>Crop Style Width: <input type="text" name="video.url" required></label></p>
+            <p><label>Crop Style Height: <input type="text" name="video.url" required></label></p>
+            <button type="button" onclick="window.location.reload()">Reset Form</button>
+            <button type="button" style="float: right;" onclick="nextStep(2)">Next</button>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step" id="step2" style="display: none;">
+            <h2>Step 2</h2>
+            <p><label>Question 2: <input type="text" name="question2"></label></p>
+            <button type="button" onclick="previousStep(1)">Previous</button>
+            <button type="button" style="float: right;" onclick="nextStep(3)">Next</button>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step" id="step3" style="display: none;">
+            <h2>Step 3</h2>
+            <p><label>Question 3: <input type="text" name="question3"></label></p>
+            <button type="button" onclick="previousStep(2)">Previous</button>
+            <button type="button" style="float: right;" onclick="nextStep(4)">Next</button>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step" id="step4" style="display: none;">
+            <h2>Step 4</h2>
+            <p><label>Question 4: <input type="text" name="question4"></label></p>
+            <button type="button" onclick="previousStep(3)">Previous</button>
+            <button type="submit" style="float: right;">Submit</button>
+        </div>
+    </form>
+</div>
+<script>
+    function validateStep(stepId) {
+        var input = document.querySelector('#step' + stepId + ' input');
+        if (input && input.value.trim() !== '') {
+            document.getElementById('indicator' + stepId).classList.add('valid');
+            document.getElementById('indicator' + stepId).classList.remove('invalid');
+            return true;
+        } else {
+            document.getElementById('indicator' + stepId).classList.add('invalid');
+            document.getElementById('indicator' + stepId).classList.remove('valid');
+            return false;
+        }
+    }
+
+    function nextStep(stepId) {
+        if (validateStep(stepId - 1)) {
+            showStep(stepId);
+        }
+    }
+
+    function previousStep(stepId) {
+        showStep(stepId);
+    }
+
+    function showStep(stepId) {
+        var steps = document.getElementsByClassName('step');
+        for (var i = 0; i < steps.length; i++) {
+            steps[i].style.display = 'none';
+        }
+        document.getElementById('step' + stepId).style.display = 'block';
+
+        updateStepIndicator(stepId);
+    }
+
+    function updateStepIndicator(stepId) {
+        var indicators = document.getElementsByClassName('step-indicator');
+        for (var i = 0; i < indicators.length; i++) {
+            indicators[i].classList.remove('active');
+            // Update the color based on validation status
+            if (i < stepId - 1) {
+                indicators[i].classList.add(validateStep(i + 1) ? 'valid' : 'invalid');
+            }
+        }
+        document.getElementById('indicator' + stepId).classList.add('active');
+    }
+
+
+    function setupStepIndicatorClicks() {
+        var indicators = document.getElementsByClassName('step-indicator');
+        for (var i = 0; i < indicators.length; i++) {
+            (function (index) {
+                indicators[i].addEventListener('click', function () {
+                    validateStep(index + 1)
+                    showStep(index + 1);
+                });
+            })(i);
+        }
+    }
+
+    setupStepIndicatorClicks();
+    showStep(1);
+</script>

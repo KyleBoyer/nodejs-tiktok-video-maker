@@ -21,7 +21,7 @@ async function callAPI(text: string, sessionId: string, voice='en_male_narration
       throw new Error(response.data.error);
     }
     if (!response.data.data) {
-      throw new Error('Invalid response when generating Tiktok voice!');
+      throw new Error('Invalid response when generating TikTok voice!');
     }
     return Buffer.from(response.data.data, 'base64');
   } catch (err) {

@@ -6,7 +6,7 @@ const program = new Command();
 
 program
     .name('nodejs-tiktok-video-maker')
-    .description('Create Tiktok Videos with just ✨ one command ✨');
+    .description('Create TikTok Videos with just ✨ one command ✨');
 // .version('0.0.1');
 
 program
