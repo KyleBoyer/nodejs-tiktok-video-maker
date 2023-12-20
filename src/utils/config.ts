@@ -47,7 +47,7 @@ const configSchema = object({
   video: object({
     speed: number().min(0.5).max(100).default(1),
     volume: number().min(0).max(1).default(0),
-    resizer: string().oneOf(['crop', 'scale']).default('crop'),
+    resize_method: string().oneOf(['crop', 'scale']).default('crop'),
     crop_style_width: string().oneOf(['left', 'center', 'right']).default('center'),
     crop_style_height: string().oneOf(['top', 'center', 'bottom']).default('center'),
     scale_pad: boolean().default(true),

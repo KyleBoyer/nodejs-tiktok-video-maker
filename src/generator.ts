@@ -449,7 +449,7 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
   const finalVideoFilters: string | ffmpeg.FilterSpecification | (string | ffmpeg.FilterSpecification)[] = [{
     filter: 'amix', options: { inputs: 3 },
   }];
-  if (config.video.resizer == 'crop') {
+  if (config.video.resize_method == 'crop') {
     const cropFilterX = {
       left: '0',
       center: '(in_w-out_w)/2',

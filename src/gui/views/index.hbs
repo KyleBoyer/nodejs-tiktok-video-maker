@@ -1,6 +1,6 @@
 <div class="form-container">
     <!-- Progress Step Bar -->
-    <div class="progress-bar">
+    <div class="progress-line-bar">
         <div class="progress-line"></div>
         <div class="step-indicator" id="indicator1">
             <div class="number">1</div>
@@ -23,13 +23,89 @@
     <form id="multiStepForm">
         <!-- Step 1 -->
         <div class="step" id="step1">
-            <h2>Step 1</h2>
-            <p><label>Background Video URL: <input type="text" name="video.url" required></label></p>
-            <p><label>Speed: <input type="text" name="video.url" required></label></p>
-            <p><label>Volume: <input type="text" name="video.url" required></label></p>
-            <p><label>Resizer: <input type="text" name="video.url" required></label></p>
-            <p><label>Crop Style Width: <input type="text" name="video.url" required></label></p>
-            <p><label>Crop Style Height: <input type="text" name="video.url" required></label></p>
+            <h2>Video Configs</h2>
+            <p><label style="display: block !important;">Background Video URL:
+                <input type="text" name="video.url" required>
+            </label></p>
+            <p><label style="display: block !important;">Background Video Speed Percentage:
+                <input type="number" name="video.speed" min="1" max="10000" value="100" step="1" required>
+            </label></p>
+            <p><label style="display: block !important;">Background Video Volume Percentage:
+                <input type="number" name="video.volume" min="0" max="100" value="0" step="1" required>
+            </label></p>
+            <p><label style="vertical-align: middle; height: 0; display: inline-block; margin-right: 5px;">Background Video Loop:</label><label class="switch">
+                <input type="checkbox" name="video.loop" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <p><label style="display: block !important;">Final Video Height:
+                <input type="number" name="video.height" min="1" value="1920" step="1" required>
+            </label></p>
+            <p><label style="display: block !important;">Final Video Width:
+                <input type="number" name="video.width" min="1" value="1080" step="1" required>
+            </label></p>
+            <!-- Advanced Options -->
+            <div id="advanced-options-step1" style="display:none;">
+                <p><label style="display: block !important;">Background Video Resize Method:
+                    <select name="video.resize_method" onchange="toggleResizeMethodDependsOn()">
+                        <option value="crop" selected>Crop</option>
+                        <option value="scale">Scale</option>
+                    </select>
+                </label></p>
+                <p class="depends-on-crop"><label style="display: block !important;">Background Video Crop Style Width:
+                    <select name="video.crop_style_width">
+                        <option value="center" selected>Center</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                    </select>
+                </label></p>
+                <p class="depends-on-crop"><label style="display: block !important;">Background Video Crop Style Height:
+                    <select name="video.crop_style_height">
+                        <option value="center" selected>Center</option>
+                        <option value="top">Top</option>
+                        <option value="bottom">Bottom</option>
+                    </select>
+                </label></p>
+                <p class="depends-on-scale"><label style="vertical-align: middle; height: 0; display: inline-block; margin-right: 5px;">Background Video Scale Pad:</label><label class="switch">
+                    <input type="checkbox" name="video.scale_pad" checked />
+                    <span class="slider round"></span>
+                </label></p>
+                <p class="depends-on-scale"><label style="display: block !important;">Background Video Scale Pad Color:
+                    {{!-- <input type="color" name="video.scale_pad_color" value="#000000" required> --}}
+                    <div id="scale_pad_color-picker" class="input-group depends-on-scale">
+                        <input name="video.scale_pad_color" type="text" value="#000000" class="form-control input-lg" style="margin-top: 0;" required>
+                        <span class="input-group-append">
+                            <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                        </span>
+                    </div>
+                </label></p>
+                <p><label style="display: block !important;">Background Video Trim Method:
+                    <select name="video.trim_method">
+                        <option value="random" selected>Random</option>
+                        <option value="keep_start">Keep Start</option>
+                        <option value="keep_end">Keep End</option>
+                    </select>
+                </label></p>
+                <p><label style="display: block !important;">Final Video Bitrate:
+                    <input type="number" name="video.bitrate" min="1" value="25000" step="1" required>
+                </label></p>
+                <p><label style="vertical-align: middle; height: 0; display: inline-block; margin-right: 5px;">Auto-Correct TTS Duration:</label><label class="switch">
+                    <input type="checkbox" name="video.autocorrect_tts_duration" checked />
+                    <span class="slider round"></span>
+                </label></p>
+                <p><label style="vertical-align: middle; height: 0; display: inline-block; margin-right: 5px;">Accurate Render Method:</label><label class="switch">
+                    <input type="checkbox" name="video.accurate_render_method" checked />
+                    <span class="slider round"></span>
+                </label></p>
+                <p><label style="display: block !important;">Final Video Output Format:
+                    <select name="video.output_format">
+                        <option value="mp4" selected>MP4</option>
+                        <option value="webm">WEBM</option>
+                    </select>
+                </label></p>
+            </div>
+            <p>
+                <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step1')">Show advanced options</button>
+            </p>
             <button type="button" onclick="window.location.reload()">Reset Form</button>
             <button type="button" style="float: right;" onclick="nextStep(2)">Next</button>
         </div>
@@ -60,6 +136,27 @@
     </form>
 </div>
 <script>
+    function toggleAdvancedOptions(buttonElement, advancedOptionsDivID){
+        const show = buttonElement.outerText.startsWith('Show');
+        if(show){
+            $(buttonElement).html('Hide advanced options');
+            $('#' + advancedOptionsDivID).slideDown("slow");
+        }else{
+            $(buttonElement).html('Show advanced options');
+            $('#' + advancedOptionsDivID).slideUp("slow");
+        }
+    }
+    function toggleResizeMethodDependsOn(){
+        const showCrop = $('select[name="video.resize_method"]').val() == 'crop';
+        if(showCrop){
+            $('.depends-on-scale').hide();
+            $('.depends-on-crop').show();
+        }else{
+            $('.depends-on-crop').hide();
+            $('.depends-on-scale').show();
+        }
+    }
+    toggleResizeMethodDependsOn();
     function validateStep(stepId) {
         var input = document.querySelector('#step' + stepId + ' input');
         if (input && input.value.trim() !== '') {
@@ -120,4 +217,13 @@
 
     setupStepIndicatorClicks();
     showStep(1);
+    $(function () {
+        $('#scale_pad_color-picker').colorpicker({
+            format: "hex",
+            useAlpha: false
+        });
+        $('#scale_pad_color-picker > input').on('focus', function(){
+            $('#scale_pad_color-picker').colorpicker('show');
+        });
+    });
 </script>
