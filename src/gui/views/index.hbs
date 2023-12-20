@@ -25,7 +25,7 @@
         <div class="step" id="step1">
             <h2>Video Configs</h2>
             <p><label style="display: block !important;">Background Video URL:
-                <input type="text" name="video.url" required>
+                <input type="url" name="video.url" placeholder="https://www.youtube.com/watch?v=" pattern="https?://.*" required>
             </label></p>
             <p><label style="display: block !important;">Background Video Speed Percentage:
                 <input type="number" name="video.speed" min="1" max="10000" value="100" step="1" required>
