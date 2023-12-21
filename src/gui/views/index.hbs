@@ -199,7 +199,7 @@
                 </div>
                 <div id="redditRandomConfigs" style="display: none;">
                     <p><label style="display: block !important;">Reddit Random Subreddits:
-                        <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;" required>
+                        <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;" required="true">
                     </label></p>
                     <p><label style="display: block !important;">Reddit Random Posts Results Limit:
                         <input type="number" name="story.reddit_random_limit" min="1" value="50" step="1" required>
@@ -302,6 +302,7 @@
     $('input[name="story.reddit_random_subreddits"]').click(function(event){
         $(event.target.nextElementSibling).find('input').click()
     });
+    $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', true)
     $('input[name="story.reddit_random_ai_similarity"]').flexdatalist({
         data: [],
         searchDisabled: true,
