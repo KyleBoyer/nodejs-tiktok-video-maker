@@ -65,13 +65,13 @@
                         <option value="bottom">Bottom</option>
                     </select>
                 </label></p>
-                <p class="depends-on-scale"><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Background Video Scale Pad:</label><label class="switch">
+                <p class="depends-on-scale" style="display:none;"><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Background Video Scale Pad:</label><label class="switch">
                     <input type="checkbox" name="video.scale_pad" checked />
                     <span class="slider round"></span>
                 </label></p>
-                <p class="depends-on-scale"><label style="display: block !important;">Background Video Scale Pad Color:
+                <p class="depends-on-scale" style="display:none;"><label style="display: block !important;">Background Video Scale Pad Color:
                     {{!-- <input type="color" name="video.scale_pad_color" value="#000000" required> --}}
-                    <div id="scale_pad_color-picker" class="input-group depends-on-scale">
+                    <div id="scale_pad_color-picker" class="input-group depends-on-scale" style="display:none;">
                         <input name="video.scale_pad_color" type="text" value="#000000" class="form-control input-lg" style="margin-top: 0;" required>
                         <span class="input-group-append">
                             <span class="input-group-text colorpicker-input-addon"><i></i></span>
@@ -86,14 +86,14 @@
                     </select>
                 </label></p>
                 <p><label style="display: block !important;">Final Video Bitrate:
-                    <input type="number" name="video.bitrate" min="1" value="25000" step="1" required>
+                    <input type="number" name="video.bitrate" min="1" value="25000" placeholder="kB/s" step="1" required>
                 </label></p>
                 <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Auto-Correct TTS Duration:</label><label class="switch">
                     <input type="checkbox" name="video.autocorrect_tts_duration" checked />
                     <span class="slider round"></span>
                 </label></p>
                 <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Accurate Render Method:</label><label class="switch">
-                    <input type="checkbox" name="video.accurate_render_method" checked />
+                    <input type="checkbox" name="video.accurate_render_method" onchange="editAudioBitrate(this)" checked />
                     <span class="slider round"></span>
                 </label></p>
                 <p><label style="display: block !important;">Final Video Output Format:
@@ -112,16 +112,137 @@
 
         <!-- Step 2 -->
         <div class="step" id="step2" style="display: none;">
-            <h2>Step 2</h2>
-            <p><label>Question 2: <input type="text" name="question2"></label></p>
+            <h2>Audio Configs</h2>
+            <p><label style="display: block !important;">Background Audio URL:
+                <input type="url" name="audio.url" placeholder="https://www.youtube.com/watch?v=" pattern="https?://.*" required>
+            </label></p>
+            <p><label style="display: block !important;">Background Audio Speed Percentage:
+                <input type="number" name="audio.speed" min="1" max="10000" value="100" step="1" required>
+            </label></p>
+            <p><label style="display: block !important;">Background Audio Volume Percentage:
+                <input type="number" name="audio.volume" min="0" max="100" value="15" step="1" required>
+            </label></p>
+            <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Background Audio Loop:</label><label class="switch">
+                <input type="checkbox" name="audio.loop" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <!-- Advanced Options -->
+            <div id="advanced-options-step2" style="display:none;">
+                <p><label style="display: block !important;">Background Audio Trim Method:
+                    <select name="audio.trim_method">
+                        <option value="random">Random</option>
+                        <option value="keep_start" selected>Keep Start</option>
+                        <option value="keep_end">Keep End</option>
+                    </select>
+                </label></p>
+                <p><label style="display: block !important;">Background Audio Bitrate:
+                    <select name="audio.bitrate" id="audioBitrate">
+                        <option value="320" style="display: none;">320 kB/s</option>
+                        <option value="256" selected>256 kB/s</option>
+                        <option value="224">224 kB/s</option>
+                        <option value="192">192 kB/s</option>
+                        <option value="160">160 kB/s</option>
+                        <option value="128">128 kB/s</option>
+                        <option value="112">112 kB/s</option>
+                        <option value="96">96 kB/s</option>
+                        <option value="80">80 kB/s</option>
+                        <option value="64">64 kB/s</option>
+                        <option value="48">48 kB/s</option>
+                        <option value="40">40 kB/s</option>
+                        <option value="32">32 kB/s</option>
+                        <option value="24">24 kB/s</option>
+                        <option value="16">16 kB/s</option>
+                        <option value="8">8 kB/s</option>
+                    </select>
+                </label></p>
+            </div>
+            <p>
+                <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step2')">Show advanced options</button>
+            </p>
             <button type="button" onclick="previousStep(1)">Previous</button>
             <button type="button" style="float: right;" onclick="nextStep(3)">Next</button>
         </div>
 
         <!-- Step 3 -->
         <div class="step" id="step3" style="display: none;">
-            <h2>Step 3</h2>
-            <p><label>Question 3: <input type="text" name="question3"></label></p>
+            <h2>Story Configs</h2>
+            <p><label style="display: block !important;">Story Source:
+                <select id="storySource" name="story.source" onchange="showStorySourceSection(this)">
+                    <option value="reddit" selected>Reddit</option>
+                    <option value="ai">AI</option>
+                </select>
+            </label></p>
+            <div id="redditSourceSection">
+                <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Screenshot Reddit Title:</label><label class="switch">
+                    <input type="checkbox" name="story.reddit_screenshot_title" checked onchange="toggleRedditScreenshotConfigs(this)" />
+                    <span class="slider round"></span>
+                </label></p>
+                <div id="redditScreenshotConfigs">
+                    <p><label style="display: block !important;">Reddit Title Screenshot Theme:
+                        <select name="story.reddit_screenshot_title_theme">
+                            <option value="dark" selected>Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </label></p>
+                    <p><label style="display: block !important;">Reddit Title Screenshot Zoom:
+                        <input type="number" name="story.reddit_screenshot_title_zoom" min="0.1" max="10.0" value="2.0" step="0.1" required>
+                    </label></p>
+                </div>
+                <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Reddit Random Story:</label><label class="switch">
+                    <input type="checkbox" name="story.reddit_random" onchange="toggleRedditRandomConfigs(this)" />
+                    <span class="slider round"></span>
+                </label></p>
+                <div id="redditNotRandomConfigs">
+                    <p><label style="display: block !important;">Reddit Post ID:
+                        <input type="text" name="story.reddit_post_id" required>
+                    </label></p>
+                </div>
+                <div id="redditRandomConfigs" style="display: none;">
+                    <p><label style="display: block !important;">Reddit Random Subreddits:
+                        <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;" required>
+                    </label></p>
+                    <p><label style="display: block !important;">Reddit Random Posts Results Limit:
+                        <input type="number" name="story.reddit_random_limit" min="1" value="50" step="1" required>
+                    </label></p>
+                    <p><label style="display: block !important;">Reddit Random Post Minimum Comments:
+                        <input type="number" name="story.reddit_random_min_comments" min="0" value="0" step="1" required>
+                    </label></p>
+                    <p><label style="display: block !important;">Reddit Random Post Minimum Character Length:
+                        <input type="number" name="story.reddit_random_min_length" min="0" max="9007199254740991" value="30" step="1" required>
+                    </label></p>
+                    <p><label style="display: block !important;">Reddit Random Post Maximum Character Length:
+                        <input type="number" name="story.reddit_random_max_length" min="0" max="9007199254740991" value="9007199254740991" step="1" required>
+                    </label></p>
+                    <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Reddit Random Post Allow NSFW:</label><label class="switch">
+                        <input type="checkbox" name="story.reddit_random_allow_nsfw" />
+                        <span class="slider round"></span>
+                    </label></p>
+                    <p><label style="display: block !important;">Reddit Random Post AI Similarity Keywords:
+                        <input type='text' placeholder='Similarity Keyword' name='story.reddit_random_ai_similarity' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;">
+                    </label></p>
+                </div>
+                <p><label style="display: block !important;">Reddit Client ID:
+                    <input type="text" name="story.reddit_client_id" required>
+                </label></p>
+                <p><label style="display: block !important;">Reddit Client Secret:
+                    <input type="password" name="story.reddit_client_secret" required>
+                </label></p>
+                <p><label style="display: block !important;">Reddit Username:
+                    <input type="text" name="story.reddit_username" onchange="toggleRedditUserPassOrToken()" required>
+                </label></p>
+                <p><label style="display: block !important;">Reddit Password:
+                    <input type="password" name="story.reddit_password" onchange="toggleRedditUserPassOrToken()" required>
+                </label></p>
+                <p><label style="display: block !important;">Reddit Refresh Token:
+                    <input type="password" name="story.reddit_refresh_token" onchange="toggleRedditUserPassOrToken()">
+                </label></p>
+                <p><label style="display: block !important;">Reddit User Agent:
+                    <input type="text" name="story.reddit_user_agent" value="nodejs-tiktok-video-maker" required>
+                </label></p>
+            </div>
+            <div id="aiSourceSection" style="display: none;">
+                
+            </div>
             <button type="button" onclick="previousStep(2)">Previous</button>
             <button type="button" style="float: right;" onclick="nextStep(4)">Next</button>
         </div>
@@ -136,6 +257,94 @@
     </form>
 </div>
 <script>
+    function toggleRedditUserPassOrToken(){
+        const screenshotOn = $('input[name="story.reddit_screenshot_title"]').prop('checked');
+        const userSet = $('input[name="story.reddit_username"]').val().length > 0;
+        const passwordSet = $('input[name="story.reddit_password"]').val().length > 0;
+        const tokenSet = $('input[name="story.reddit_refresh_token"]').val().length > 0;
+        // Set default state, because user/pass is easier than refresh token
+        $('input[name="story.reddit_refresh_token"]').prop('required', false);
+        $('input[name="story.reddit_username"]').prop('required', true);
+        $('input[name="story.reddit_password"]').prop('required', true);
+        if(!screenshotOn){
+            if(tokenSet){
+                $('input[name="story.reddit_username"]').prop('required', false);
+                $('input[name="story.reddit_password"]').prop('required', false);
+                $('input[name="story.reddit_refresh_token"]').prop('required', true);
+                $('input[name="story.reddit_username"]').css('border-color', '');
+                $('input[name="story.reddit_password"]').css('border-color', '');
+                $('input[name="story.reddit_refresh_token"]').css('border-color', '');
+            } else if(!userSet && !passwordSet){
+                $('input[name="story.reddit_username"]').css('border-color', 'orange');
+                $('input[name="story.reddit_password"]').css('border-color', 'orange');
+                $('input[name="story.reddit_refresh_token"]').css('border-color', 'orange');
+            }else{
+                $('input[name="story.reddit_username"]').css('border-color', '');
+                $('input[name="story.reddit_password"]').css('border-color', '');
+                $('input[name="story.reddit_refresh_token"]').css('border-color', '');
+            }
+        }else{
+            $('input[name="story.reddit_username"]').css('border-color', '');
+            $('input[name="story.reddit_password"]').css('border-color', '');
+            $('input[name="story.reddit_refresh_token"]').css('border-color', '');
+        }
+    }
+    $('input[name="story.reddit_random_subreddits"]').flexdatalist({
+        data: [],
+        searchDisabled: true,
+        searchDelay: 0,
+        minLength: 1,
+        selectionRequired: false,
+        noResultsText: 'Press enter to add "{keyword}"',
+        multiple: true,
+        toggleSelected: true,
+    });
+    $('input[name="story.reddit_random_subreddits"]').click(function(event){
+        $(event.target.nextElementSibling).find('input').click()
+    });
+    $('input[name="story.reddit_random_ai_similarity"]').flexdatalist({
+        data: [],
+        searchDisabled: true,
+        searchDelay: 0,
+        minLength: 1,
+        selectionRequired: false,
+        noResultsText: 'Press enter to add "{keyword}"',
+        multiple: true,
+        toggleSelected: true,
+    });
+    $('input[name="story.reddit_random_ai_similarity"]').click(function(event){
+        $(event.target.nextElementSibling).find('input').click()
+    });
+    function toggleRedditRandomConfigs(checkboxElement){
+        if(checkboxElement.checked){
+            $('#redditNotRandomConfigs').slideUp("slow");
+            $('#redditRandomConfigs').slideDown("slow");
+        }else{
+            $('#redditRandomConfigs').slideUp("slow");
+            $('#redditNotRandomConfigs').slideDown("slow");
+        }
+    }
+    function toggleRedditScreenshotConfigs(checkboxElement){
+        if(checkboxElement.checked){
+            $('#redditScreenshotConfigs').slideDown("slow");
+        }else{
+            $('#redditScreenshotConfigs').slideUp("slow");
+        }
+        toggleRedditUserPassOrToken()
+    }
+    function editAudioBitrate(checkboxElement){
+        if(checkboxElement.checked){
+            if($("#audioBitrate").val() == '320'){
+                $("#audioBitrate").val('256');
+            }
+            $("#audioBitrate option[value=320]").hide();
+        }else{
+            if($("#audioBitrate").val() == '256'){
+                $("#audioBitrate").val('320');
+            }
+            $("#audioBitrate option[value=320]").show();
+        }
+    }
     function toggleAdvancedOptions(buttonElement, advancedOptionsDivID){
         const show = buttonElement.outerText.startsWith('Show');
         if(show){
@@ -144,6 +353,17 @@
         }else{
             $(buttonElement).html('Show advanced options');
             $('#' + advancedOptionsDivID).slideUp("slow");
+        }
+    }
+    function showStorySourceSection(storySourceElement){
+        if($(storySourceElement).val() == 'ai'){
+            console.log('ai source')
+            $('#redditSourceSection').slideUp("slow");
+            $('#aiSourceSection').slideDown("slow");
+        }else{
+            console.log('reddit source')
+            $('#aiSourceSection').slideUp("slow");
+            $('#redditSourceSection').slideDown("slow");
         }
     }
     function toggleResizeMethodDependsOn(){
@@ -156,7 +376,6 @@
             $('.depends-on-scale').show();
         }
     }
-    toggleResizeMethodDependsOn();
     function validateStep(stepId) {
         var input = document.querySelector('#step' + stepId + ' input');
         if (input && input.value.trim() !== '') {
@@ -225,5 +444,7 @@
         $('#scale_pad_color-picker > input').on('focus', function(){
             $('#scale_pad_color-picker').colorpicker('show');
         });
+        // story.reddit_refresh_token
+        // 
     });
 </script>

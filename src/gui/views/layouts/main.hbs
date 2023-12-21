@@ -101,7 +101,7 @@
         }
         /* Additional CSS styles for input fields */
 
-        input[type="text"], input[type="url"], input[type="number"], select {
+        input[type="password"], input[type="text"], input[type="url"], input[type="number"], select {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -111,16 +111,16 @@
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, select:focus {
+        input[type="password"]:focus, input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, select:focus {
             border-color: #007bff;
             outline: none;
         }
 
-        input[type="text"]:invalid, input[type="url"]:invalid, input[type="number"]:invalid, select:invalid {
+        input[type="password"]:invalid, input[type="text"]:invalid, input[type="url"]:invalid, input[type="number"]:invalid, select:invalid {
             border-color: orangered;
         }
 
-        input[type="text"]:valid, input[type="url"]:valid, input[type="number"]:valid, select:valid {
+        input[type="password"]:valid, input[type="text"]:valid, input[type="url"]:valid, input[type="number"]:valid, select:valid {
             border-color: limegreen;
         }
         .number {
@@ -200,12 +200,20 @@
         .slider.round:before {
             border-radius: 50%;
         }
+        .flexdatalist-multiple-value, .flexdatalist-multiple-value > input {
+            width: 100% !important;
+        }
+        .flexdatalist-multiple-value {
+            margin: 0px !important;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css" integrity="sha512-rt/SrQ4UNIaGfDyEXZtNcyWvQeOq0QLygHluFQcSjaGB04IxWhal71tKuzP6K8eYXYB6vJV4pHkXcmFGGQ1/0w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js" integrity="sha512-igl8WEUuas9k5dtnhKqyyld6TzzRjvMqLC79jkgT3z02FvJyHAuUtyemm/P/jYSne1xwFI06ezQxEwweaiV7VA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.4.0/css/bootstrap-colorpicker.min.css" integrity="sha512-m/uSzCYYP5f55d4nUi9mnY9m49I8T+GUEe4OQd3fYTpFU9CIaPazUG/f8yUkY0EWlXBJnpsA7IToT2ljMgB87Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.4.0/js/bootstrap-colorpicker.min.js" integrity="sha512-94dgCw8xWrVcgkmOc2fwKjO4dqy/X3q7IjFru6MHJKeaAzCvhkVtOS6S+co+RbcZvvPBngLzuVMApmxkuWZGwQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-flexdatalist/2.3.0/jquery.flexdatalist.min.css" integrity="sha512-feX1WY95JHQ//uffCG42xy0PofA6DAZSEgIQMMOmRBbSmmOoz/J52azXXLM3kYa9EkQ5PlOHFFCgqpnPJ1oYpg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-flexdatalist/2.3.0/jquery.flexdatalist.js" integrity="sha512-EV6mniicxCv11+szFfhHJ4qKAQP4HAjQQHb4TBvIHqXuuS+8dCqb4h8V0n/W1HtSkEYEFpQGOWh19FmlOyg7gQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     {{{body}}}
