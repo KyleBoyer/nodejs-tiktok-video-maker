@@ -110,17 +110,19 @@
             box-sizing: border-box;
             transition: border-color 0.3s;
         }
-        input:focus + .flexdatalist-multiple, input[type="password"]:focus, input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, select:focus {
-            border-color: #007bff !important;
-            outline: none;
-        }
-
-        input:invalid + .flexdatalist-multiple, input[type="password"]:invalid, input[type="text"]:invalid, input[type="url"]:invalid, input[type="number"]:invalid, select:invalid {
+        input:invalid:not(.orange-border):not(:focus):not(.focus) + .flexdatalist-multiple:not(.orange-border):not(:focus):not(.focus), input[type="password"]:invalid:not(.orange-border):not(:focus):not(.focus), input[type="text"]:invalid:not(.orange-border):not(:focus):not(.focus), input[type="url"]:invalid:not(.orange-border):not(:focus):not(.focus), input[type="number"]:invalid:not(.orange-border):not(:focus):not(.focus), select:invalid:not(.orange-border):not(:focus):not(.focus) {
             border-color: orangered !important;
         }
 
-        input:valid + .flexdatalist-multiple, input[type="password"]:valid, input[type="text"]:valid, input[type="url"]:valid, input[type="number"]:valid, select:valid {
+        input:valid:not(.orange-border):not(:focus):not(.focus) + .flexdatalist-multiple:not(.orange-border):not(:focus):not(.focus), input[type="password"]:valid:not(.orange-border):not(:focus):not(.focus), input[type="text"]:valid:not(.orange-border):not(:focus):not(.focus), input[type="url"]:valid:not(.orange-border):not(:focus):not(.focus), input[type="number"]:valid:not(.orange-border):not(:focus):not(.focus), select:valid:not(.orange-border):not(:focus):not(.focus) {
             border-color: limegreen !important;
+        }
+        .orange-border {
+            border-color: orange !important;
+        }
+        .flexdatalist-multiple.focus, input[type="password"]:focus, input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, select:focus {
+            border-color: #007bff !important;
+            outline: none;
         }
         .number {
             width: 30px;

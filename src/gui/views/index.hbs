@@ -271,22 +271,22 @@
                 $('input[name="story.reddit_username"]').prop('required', false);
                 $('input[name="story.reddit_password"]').prop('required', false);
                 $('input[name="story.reddit_refresh_token"]').prop('required', true);
-                $('input[name="story.reddit_username"]').css('border-color', '');
-                $('input[name="story.reddit_password"]').css('border-color', '');
-                $('input[name="story.reddit_refresh_token"]').css('border-color', '');
+                $('input[name="story.reddit_username"]').removeClass('orange-border');
+                $('input[name="story.reddit_password"]').removeClass('orange-border');
+                $('input[name="story.reddit_refresh_token"]').removeClass('orange-border');
             } else if(!userSet && !passwordSet){
-                $('input[name="story.reddit_username"]').css('border-color', 'orange');
-                $('input[name="story.reddit_password"]').css('border-color', 'orange');
-                $('input[name="story.reddit_refresh_token"]').css('border-color', 'orange');
+                $('input[name="story.reddit_username"]').addClass('orange-border');
+                $('input[name="story.reddit_password"]').addClass('orange-border');
+                $('input[name="story.reddit_refresh_token"]').addClass('orange-border');
             }else{
-                $('input[name="story.reddit_username"]').css('border-color', '');
-                $('input[name="story.reddit_password"]').css('border-color', '');
-                $('input[name="story.reddit_refresh_token"]').css('border-color', '');
+                $('input[name="story.reddit_username"]').removeClass('orange-border');
+                $('input[name="story.reddit_password"]').removeClass('orange-border');
+                $('input[name="story.reddit_refresh_token"]').removeClass('orange-border');
             }
         }else{
-            $('input[name="story.reddit_username"]').css('border-color', '');
-            $('input[name="story.reddit_password"]').css('border-color', '');
-            $('input[name="story.reddit_refresh_token"]').css('border-color', '');
+            $('input[name="story.reddit_username"]').removeClass('orange-border');
+            $('input[name="story.reddit_password"]').removeClass('orange-border');
+            $('input[name="story.reddit_refresh_token"]').removeClass('orange-border');
         }
     }
     $('input[name="story.reddit_random_subreddits"]').flexdatalist({
@@ -378,16 +378,19 @@
         }
     }
     function validateStep(stepId) {
-        var input = document.querySelector('#step' + stepId + ' input');
-        if (input && input.value.trim() !== '') {
-            document.getElementById('indicator' + stepId).classList.add('valid');
-            document.getElementById('indicator' + stepId).classList.remove('invalid');
-            return true;
-        } else {
-            document.getElementById('indicator' + stepId).classList.add('invalid');
-            document.getElementById('indicator' + stepId).classList.remove('valid');
-            return false;
+        var inputs = [...document.querySelectorAll('#step' + stepId + ' input')];
+        var retVal = true;
+        for(const input of inputs){
+            if (input && input.value.trim() !== '') {
+                document.getElementById('indicator' + stepId).classList.add('valid');
+                document.getElementById('indicator' + stepId).classList.remove('invalid');
+            } else {
+                document.getElementById('indicator' + stepId).classList.add('invalid');
+                document.getElementById('indicator' + stepId).classList.remove('valid');
+                retVal = false;
+            }
         }
+        return retVal;
     }
 
     function nextStep(stepId) {
