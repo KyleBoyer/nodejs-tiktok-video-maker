@@ -44,7 +44,7 @@
                 <input type="number" name="video.width" min="1" value="1080" step="1" required>
             </label></p>
             <!-- Advanced Options -->
-            <div id="advanced-options-step1" style="display:none;">
+            <div class="advanced-options-step1" style="display:none;">
                 <p><label style="display: block !important;">Background Video Resize Method:
                     <select name="video.resize_method" onchange="toggleResizeMethodDependsOn()">
                         <option value="crop" selected>Crop</option>
@@ -127,7 +127,7 @@
                 <span class="slider round"></span>
             </label></p>
             <!-- Advanced Options -->
-            <div id="advanced-options-step2" style="display:none;">
+            <div class="advanced-options-step2" style="display:none;">
                 <p><label style="display: block !important;">Background Audio Trim Method:
                     <select name="audio.trim_method">
                         <option value="random">Random</option>
@@ -178,13 +178,13 @@
                     <span class="slider round"></span>
                 </label></p>
                 <div id="redditScreenshotConfigs">
-                    <p><label style="display: block !important;">Reddit Title Screenshot Theme:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Title Screenshot Theme:
                         <select name="story.reddit_screenshot_title_theme">
                             <option value="dark" selected>Dark</option>
                             <option value="light">Light</option>
                         </select>
                     </label></p>
-                    <p><label style="display: block !important;">Reddit Title Screenshot Zoom:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Title Screenshot Zoom:
                         <input type="number" name="story.reddit_screenshot_title_zoom" min="0.1" max="10.0" value="2.0" step="0.1" required>
                     </label></p>
                 </div>
@@ -201,23 +201,23 @@
                     <p><label style="display: block !important;">Reddit Random Subreddits:
                         <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;" required="true">
                     </label></p>
-                    <p><label style="display: block !important;">Reddit Random Posts Results Limit:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Posts Results Limit:
                         <input type="number" name="story.reddit_random_limit" min="1" value="50" step="1" required>
                     </label></p>
-                    <p><label style="display: block !important;">Reddit Random Post Minimum Comments:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Post Minimum Comments:
                         <input type="number" name="story.reddit_random_min_comments" min="0" value="0" step="1" required>
                     </label></p>
-                    <p><label style="display: block !important;">Reddit Random Post Minimum Character Length:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Post Minimum Character Length:
                         <input type="number" name="story.reddit_random_min_length" min="0" max="9007199254740991" value="30" step="1" required>
                     </label></p>
-                    <p><label style="display: block !important;">Reddit Random Post Maximum Character Length:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Post Maximum Character Length:
                         <input type="number" name="story.reddit_random_max_length" min="0" max="9007199254740991" value="9007199254740991" step="1" required>
                     </label></p>
-                    <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Reddit Random Post Allow NSFW:</label><label class="switch">
+                    <p class="advanced-options-step3" style="display:none;"><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Reddit Random Post Allow NSFW:</label><label class="switch">
                         <input type="checkbox" name="story.reddit_random_allow_nsfw" />
                         <span class="slider round"></span>
                     </label></p>
-                    <p><label style="display: block !important;">Reddit Random Post AI Similarity Keywords:
+                    <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Post AI Similarity Keywords:
                         <input type='text' placeholder='Similarity Keyword' name='story.reddit_random_ai_similarity' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;">
                     </label></p>
                 </div>
@@ -236,13 +236,16 @@
                 <p><label style="display: block !important;">Reddit Refresh Token:
                     <input type="password" name="story.reddit_refresh_token" onchange="toggleRedditUserPassOrToken()">
                 </label></p>
-                <p><label style="display: block !important;">Reddit User Agent:
+                <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit User Agent:
                     <input type="text" name="story.reddit_user_agent" value="nodejs-tiktok-video-maker" required>
                 </label></p>
             </div>
             <div id="aiSourceSection" style="display: none;">
                 
             </div>
+            <p>
+                <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step3')">Show advanced options</button>
+            </p>
             <button type="button" onclick="previousStep(2)">Previous</button>
             <button type="button" style="float: right;" onclick="nextStep(4)">Next</button>
         </div>
@@ -346,14 +349,14 @@
             $("#audioBitrate option[value=320]").show();
         }
     }
-    function toggleAdvancedOptions(buttonElement, advancedOptionsDivID){
+    function toggleAdvancedOptions(buttonElement, advancedOptionsDivClass){
         const show = buttonElement.outerText.startsWith('Show');
         if(show){
             $(buttonElement).html('Hide advanced options');
-            $('#' + advancedOptionsDivID).slideDown("slow");
+            $('.' + advancedOptionsDivClass).slideDown("slow");
         }else{
             $(buttonElement).html('Show advanced options');
-            $('#' + advancedOptionsDivID).slideUp("slow");
+            $('.' + advancedOptionsDivClass).slideUp("slow");
         }
     }
     function showStorySourceSection(storySourceElement){
@@ -381,14 +384,14 @@
         var inputs = [...document.querySelectorAll('#step' + stepId + ' input')];
         var retVal = true;
         for(const input of inputs){
-            if (input && input.value.trim() !== '') {
-                document.getElementById('indicator' + stepId).classList.add('valid');
-                document.getElementById('indicator' + stepId).classList.remove('invalid');
-            } else {
-                document.getElementById('indicator' + stepId).classList.add('invalid');
-                document.getElementById('indicator' + stepId).classList.remove('valid');
-                retVal = false;
-            }
+            retVal = retVal && (input && input.value.trim() !== '');
+        }
+        if(retVal){
+            document.getElementById('indicator' + stepId).classList.add('valid');
+            document.getElementById('indicator' + stepId).classList.remove('invalid');
+        }else{
+            document.getElementById('indicator' + stepId).classList.add('invalid');
+            document.getElementById('indicator' + stepId).classList.remove('valid');
         }
         return retVal;
     }
