@@ -208,10 +208,10 @@
                         <input type="number" name="story.reddit_random_min_comments" min="0" value="0" step="1" required>
                     </label></p>
                     <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Post Minimum Character Length:
-                        <input type="number" name="story.reddit_random_min_length" min="0" max="9007199254740991" value="30" step="1" required>
+                        <input type="number" name="story.reddit_random_min_length" min="0" value="30" step="1" required>
                     </label></p>
                     <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Post Maximum Character Length:
-                        <input type="number" name="story.reddit_random_max_length" min="0" max="9007199254740991" value="9007199254740991" step="1" required>
+                        <input type="number" name="story.reddit_random_max_length" min="0" value="9007199254740991" step="1" required>
                     </label></p>
                     <p class="advanced-options-step3" style="display:none;"><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Reddit Random Post Allow NSFW:</label><label class="switch">
                         <input type="checkbox" name="story.reddit_random_allow_nsfw" />
@@ -239,9 +239,56 @@
                 <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit User Agent:
                     <input type="text" name="story.reddit_user_agent" value="nodejs-tiktok-video-maker" required>
                 </label></p>
+                <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">AI story reword:</label><label class="switch">
+                    <input type="checkbox" name="story.ai_rewrite" onchange="toggleAIRewrite()"/>
+                    <span class="slider round"></span>
+                </label></p>
             </div>
+            <!-- AI Rewrite need to show AI type -->
+            <!-- AI type need to show AI specific configs for rewrites -->
+            <!-- AI SOURCE need to show AI specific configs for creations -->
             <div id="aiSourceSection" style="display: none;">
-                
+                <p><label style="display: block !important;">AI Type:
+                    <select name="story.ai_type">
+                        <option value="openai" selected>Open AI</option>
+                    </select>
+                </label></p>
+                <div id="openAISection">
+                    <div id="openaiSharedConfigs">
+                        <p><label style="display: block !important;">Open AI API Key:
+                            <input type="password" name="story.openai_api_key" placeholder="sk-">
+                        </label></p>
+                        <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Open AI API Base:
+                            <input type="text" name="story.openai_api_base" value="https://api.openai.com/v1">
+                        </label></p>
+                        <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Open AI Model:
+                            <input type="text" name="story.openai_model" value="gpt-3.5-turbo-16k">
+                        </label></p>
+                        <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Open AI Retries:
+                            <input type="number" name="story.openai_retries" min="0" max="100" value="5" step="1" required>
+                        </label></p>
+                    </div>
+                    <div id="openaiRewriteSection">
+                        <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Fail if unable to rewrite the story:</label><label class="switch">
+                            <input type="checkbox" name="story.openai_rewrite_retry_fail_on_error" checked />
+                            <span class="slider round"></span>
+                        </label></p>
+                        <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Rewrite Split Section Tokens:
+                            <input type="number" name="story.openai_rewrite_chunk_max_tokens" min="25" value="1000" step="1" required>
+                        </label></p>
+                        <p><label style="display: block !important;">Rewrite Length Percentage:
+                            <input type="number" name="story.openai_rewrite_length" min="1" max="10000" value="100" step="1" required>
+                        </label></p>
+                    </div>
+                    <div id="openaiNewStorySection" style="display: none;">
+                        <p><label style="display: block !important;">Open AI New Story Prompt:
+                            <input type="text" name="story.openai_new_story_prompt" placeholder="Write a story about...">
+                        </label></p>
+                        <p><label style="display: block !important;">Open AI New Story Minimum Length Characters:
+                            <input type="number" name="story.openai_new_story_min_length" min="1" value="10" step="1" required>
+                        </label></p>
+                    </div>
+                </div>
             </div>
             <p>
                 <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step3')">Show advanced options</button>
@@ -260,6 +307,19 @@
     </form>
 </div>
 <script>
+    function toggleAIRewrite(){
+        if($('input[name="story.ai_rewrite"]').prop('checked')){
+            $('#openAISection').show();
+            $('#openaiRewriteSection').show();
+            $('#openaiNewStorySection').hide();
+            $('#aiSourceSection').slideDown('slow');
+        }else{
+            $('#aiSourceSection').slideUp('slow');
+            $('#openaiNewStorySection').show();
+            $('#openaiRewriteSection').hide();
+            $('#openAISection').hide();
+        }
+    }
     function toggleRedditUserPassOrToken(){
         const screenshotOn = $('input[name="story.reddit_screenshot_title"]').prop('checked');
         const userSet = $('input[name="story.reddit_username"]').val().length > 0;
@@ -381,6 +441,8 @@
                 $(aiInput).prop('required', oldRequired || currentRequired);
             }
             $('#redditSourceSection').slideUp("slow");
+            $('#openaiRewriteSection').hide();
+            $('#openaiNewStorySection').show();
             $('#aiSourceSection').slideDown("slow");
         }else{
             const aiInputs = [...document.getElementById('aiSourceSection').getElementsByTagName('input')];
@@ -398,6 +460,9 @@
                 $(redditInput).prop('required', oldRequired || currentRequired);
             }
             $('#aiSourceSection').slideUp("slow");
+            $('#openaiRewriteSection').show();
+            $('#openaiNewStorySection').hide();
+            toggleAIRewrite();
             $('#redditSourceSection').slideDown("slow");
         }
     }
