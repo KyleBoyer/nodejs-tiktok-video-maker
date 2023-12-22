@@ -199,7 +199,7 @@
                 </div>
                 <div id="redditRandomConfigs" style="display: none;">
                     <p><label style="display: block !important;">Reddit Random Subreddits:
-                        <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;" required="true">
+                        <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;">
                     </label></p>
                     <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Posts Results Limit:
                         <input type="number" name="story.reddit_random_limit" min="1" value="50" step="1" required>
@@ -305,7 +305,6 @@
     $('input[name="story.reddit_random_subreddits"]').click(function(event){
         $(event.target.nextElementSibling).find('input').click()
     });
-    $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', true)
     $('input[name="story.reddit_random_ai_similarity"]').flexdatalist({
         data: [],
         searchDisabled: true,
@@ -321,9 +320,15 @@
     });
     function toggleRedditRandomConfigs(checkboxElement){
         if(checkboxElement.checked){
+            $('input[name="story.reddit_post_id"]').prop('required', false);
+            $('input[name="story.reddit_random_subreddits"]').prop('required', true);
+            $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', true);
             $('#redditNotRandomConfigs').slideUp("slow");
             $('#redditRandomConfigs').slideDown("slow");
         }else{
+            $('input[name="story.reddit_post_id"]').prop('required', true);
+            $('input[name="story.reddit_random_subreddits"]').prop('required', false);
+            $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', false);
             $('#redditRandomConfigs').slideUp("slow");
             $('#redditNotRandomConfigs').slideDown("slow");
         }
@@ -361,11 +366,37 @@
     }
     function showStorySourceSection(storySourceElement){
         if($(storySourceElement).val() == 'ai'){
-            console.log('ai source')
+            const redditInputs = [...document.getElementById('redditSourceSection').getElementsByTagName('input')];
+            for(const redditInput of redditInputs){
+                const oldRequired = $(redditInput).prop('required');
+                if([true, false].includes(oldRequired)){
+                    $(redditInput).prop('old_required', oldRequired)
+                }
+                $(redditInput).prop('required', false)
+            }
+            const aiInputs = [...document.getElementById('aiSourceSection').getElementsByTagName('input')];
+            for(const aiInput of aiInputs){
+                const oldRequired = $(aiInput).prop('old_required');
+                const currentRequired = $(aiInput).prop('required');
+                $(aiInput).prop('required', oldRequired || currentRequired);
+            }
             $('#redditSourceSection').slideUp("slow");
             $('#aiSourceSection').slideDown("slow");
         }else{
-            console.log('reddit source')
+            const aiInputs = [...document.getElementById('aiSourceSection').getElementsByTagName('input')];
+            for(const aiInput of aiInputs){
+                const oldRequired = $(aiInput).prop('required');
+                if([true, false].includes(oldRequired)){
+                    $(aiInput).prop('old_required', oldRequired)
+                }
+                $(aiInput).prop('required', false)
+            }
+            const redditInputs = [...document.getElementById('redditSourceSection').getElementsByTagName('input')];
+            for(const redditInput of redditInputs){
+                const oldRequired = $(redditInput).prop('old_required');
+                const currentRequired = $(redditInput).prop('required');
+                $(redditInput).prop('required', oldRequired || currentRequired);
+            }
             $('#aiSourceSection').slideUp("slow");
             $('#redditSourceSection').slideDown("slow");
         }
@@ -384,7 +415,11 @@
         var inputs = [...document.querySelectorAll('#step' + stepId + ' input')];
         var retVal = true;
         for(const input of inputs){
-            retVal = retVal && (input && input.value.trim() !== '');
+            const inputValid = input && input.checkValidity();
+            retVal = retVal && inputValid;
+            if(!inputValid){
+                console.log("Input not valid:", input);
+            }
         }
         if(retVal){
             document.getElementById('indicator' + stepId).classList.add('valid');
@@ -395,7 +430,7 @@
         }
         return retVal;
     }
-
+    var currentStep = 1;
     function nextStep(stepId) {
         if (validateStep(stepId - 1)) {
             showStep(stepId);
@@ -414,6 +449,7 @@
         document.getElementById('step' + stepId).style.display = 'block';
 
         updateStepIndicator(stepId);
+        currentStep = stepId;
     }
 
     function updateStepIndicator(stepId) {
@@ -421,7 +457,7 @@
         for (var i = 0; i < indicators.length; i++) {
             indicators[i].classList.remove('active');
             // Update the color based on validation status
-            if (i < stepId - 1) {
+            if (i < stepId - 1 || i == currentStep - 1) {
                 indicators[i].classList.add(validateStep(i + 1) ? 'valid' : 'invalid');
             }
         }
