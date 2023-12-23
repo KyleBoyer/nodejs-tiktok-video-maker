@@ -15,6 +15,8 @@ app.engine('.hbs', hbs.engine);
 app.set('view engine', '.hbs');
 app.set('views', join(__dirname, 'views'));
 
+app.use(express.static(join(__dirname, 'public')));
+
 app.all(['/', '/index.html', 'index.htm'], (_req, res) => {
   res.render('index.hbs', {
     server_text: 'Hello from SS!',
