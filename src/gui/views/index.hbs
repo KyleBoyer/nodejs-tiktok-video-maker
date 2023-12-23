@@ -16,7 +16,19 @@
         </div>
         <div class="step-indicator" id="indicator4">
             <div class="number">4</div>
-            <div class="label">Other</div>
+            <div class="label">Replacements</div>
+        </div>
+        <div class="step-indicator" id="indicator5">
+            <div class="number">5</div>
+            <div class="label">TTS</div>
+        </div>
+        <div class="step-indicator" id="indicator6">
+            <div class="number">6</div>
+            <div class="label">Captions</div>
+        </div>
+        <div class="step-indicator" id="indicator7">
+            <div class="number">7</div>
+            <div class="label">Cleanup</div>
         </div>
     </div>
 
@@ -299,9 +311,46 @@
 
         <!-- Step 4 -->
         <div class="step" id="step4" style="display: none;">
-            <h2>Step 4</h2>
-            <p><label>Question 4: <input type="text" name="question4"></label></p>
+            <h2>Story Replacements Config</h2>
+            
             <button type="button" onclick="previousStep(3)">Previous</button>
+            <button type="button" style="float: right;" onclick="nextStep(5)">Next</button>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step" id="step5" style="display: none;">
+            <h2>Text to Speech Configs</h2>
+            <button type="button" onclick="previousStep(4)">Previous</button>
+            <button type="button" style="float: right;" onclick="nextStep(6)">Next</button>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step" id="step6" style="display: none;">
+            <h2>Caption Configs</h2>
+            <button type="button" onclick="previousStep(5)">Previous</button>
+            <button type="button" style="float: right;" onclick="nextStep(7)">Next</button>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step" id="step7" style="display: none;">
+            <h2>Cleanup Configs</h2>
+            <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Delete Temporary Background Video Files:</label><label class="switch">
+                <input type="checkbox" name="cleanup.background_video" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Delete Temporary Background Audio Files:</label><label class="switch">
+                <input type="checkbox" name="cleanup.background_audio" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Delete Temporary Text to Speech Files:</label><label class="switch">
+                <input type="checkbox" name="cleanup.tts" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <p><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Delete Temporary Caption Files:</label><label class="switch">
+                <input type="checkbox" name="cleanup.captions" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <button type="button" onclick="previousStep(6)">Previous</button>
             <button type="submit" style="float: right;">Submit</button>
         </div>
     </form>
