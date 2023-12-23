@@ -8,6 +8,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <style>
+        {{#foreach fonts}}
+        @font-face {
+            font-family: '{{ this }}';
+            src: url('../fonts/{{ this }}.ttf') format('truetype');
+        }
+        {{/foreach}}
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;

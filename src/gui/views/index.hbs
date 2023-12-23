@@ -327,6 +327,38 @@
         <!-- Step 6 -->
         <div class="step" id="step6" style="display: none;">
             <h2>Caption Configs</h2>
+            <p class="advanced-options-step6" style="display:none;"><label style="display: block !important;">Reddit Title Screenshot Theme:
+                <select name="captions.nlp_splitter">
+                    <option value="compromise" selected>compromise</option>
+                    <option value="wink">wink</option>
+                    <option value="natural">natural</option>
+                </select>
+            </label></p>
+            <p class="advanced-options-step6" style="display:none;"><label style="display: block !important;">Padding Height:
+                <input type="number" name="captions.padding.height" min="0" value="200" step="1">
+            </label></p>
+            <p class="advanced-options-step6" style="display:none;"><label style="display: block !important;">Padding Width:
+                <input type="number" name="captions.padding.width" min="0" value="200" step="1">
+            </label></p>
+            <p class="advanced-options-step6" style="display:none;"><label style="display: block !important;">Padding between lines:
+                <input type="number" name="captions.padding.between_lines" min="0" value="10" step="1">
+            </label></p>
+            <!-- Background Color Selector rgba -->
+            <!-- Caption Color Selector rgba -->
+            <!-- Stroke Color Selector rgba -->
+            <p class="advanced-options-step6" style="display:none;"><label style="display: block !important;">Stroke/outline width:
+                <input type="number" name="captions.stroke_width" min="0" value="5" step="1">
+            </label></p>
+            <p><label style="display: block !important;">Font:
+                <select id="font-suggestions" name="captions.font" onchange="updateCaptionsFontInput()">
+                </select>
+            </label></p>
+            <p class="advanced-options-step6" style="display:none;"><label style="display: block !important;">Font size:
+                <input type="number" name="captions.font_size" min="1" value="50" step="1">
+            </label></p>
+            <p>
+                <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step6')">Show advanced options</button>
+            </p>
             <button type="button" onclick="previousStep(5)">Previous</button>
             <button type="button" style="float: right;" onclick="nextStep(7)">Next</button>
         </div>
@@ -356,6 +388,32 @@
     </form>
 </div>
 <script>
+    function updateCaptionsFontInput(){
+        const captionsFontInput = $('select[name="captions.font"]');
+        captionsFontInput.css('font-family', captionsFontInput.val());
+    }
+    const fontCheck = new Set([
+        // Windows 10
+        'Arial', 'Arial Black', 'Bahnschrift', 'Calibri', 'Cambria', 'Cambria Math', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Ebrima', 'Franklin Gothic Medium', 'Gabriola', 'Gadugi', 'Georgia', 'HoloLens MDL2 Assets', 'Impact', 'Ink Free', 'Javanese Text', 'Leelawadee UI', 'Lucida Console', 'Lucida Sans Unicode', 'Malgun Gothic', 'Marlett', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MV Boli', 'Myanmar Text', 'Nirmala UI', 'Palatino Linotype', 'Segoe MDL2 Assets', 'Segoe Print', 'Segoe Script', 'Segoe UI', 'Segoe UI Historic', 'Segoe UI Emoji', 'Segoe UI Symbol', 'SimSun', 'Sitka', 'Sylfaen', 'Symbol', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Webdings', 'Wingdings', 'Yu Gothic',
+        // macOS
+        'American Typewriter', 'Andale Mono', 'Arial', 'Arial Black', 'Arial Narrow', 'Arial Rounded MT Bold', 'Arial Unicode MS', 'Avenir', 'Avenir Next', 'Avenir Next Condensed', 'Baskerville', 'Big Caslon', 'Bodoni 72', 'Bodoni 72 Oldstyle', 'Bodoni 72 Smallcaps', 'Bradley Hand', 'Brush Script MT', 'Chalkboard', 'Chalkboard SE', 'Chalkduster', 'Charter', 'Cochin', 'Comic Sans MS', 'Copperplate', 'Courier', 'Courier New', 'Didot', 'DIN Alternate', 'DIN Condensed', 'Futura', 'Geneva', 'Georgia', 'Gill Sans', 'Helvetica', 'Helvetica Neue', 'Herculanum', 'Hoefler Text', 'Impact', 'Lucida Grande', 'Luminari', 'Marker Felt', 'Menlo', 'Microsoft Sans Serif', 'Monaco', 'Noteworthy', 'Optima', 'Palatino', 'Papyrus', 'Phosphate', 'Rockwell', 'Savoye LET', 'SignPainter', 'Skia', 'Snell Roundhand', 'Tahoma', 'Times', 'Times New Roman', 'Trattatello', 'Trebuchet MS', 'Verdana', 'Zapfino',
+    ].sort());
+
+    (async() => {
+        await document.fonts.ready;
+        const allFonts = {{{stringify fonts}}};
+        for (const font of fontCheck.values()) {
+            if (!allFonts.includes(font) && document.fonts.check(`12px "${font}"`)) {
+                allFonts.push(font);
+            }
+        }
+        allFonts.sort();
+        for(const font of allFonts){
+            $("#font-suggestions").append($('<option>', { value: font, text: font, style: 'font-family: ' + font }));
+        }
+        $('#font-suggestions').val('Roboto-Regular');
+        updateCaptionsFontInput();
+    })();
     function disableRequired(input){
         const oldRequiredProp = $(input).prop('required');
         const oldRequiredAttr = $(input).attr('required');
