@@ -357,7 +357,6 @@
 </div>
 <script>
     function disableRequired(input){
-        console.log('Disable required', input)
         const oldRequiredProp = $(input).prop('required');
         const oldRequiredAttr = $(input).attr('required');
         const oldRequired = oldRequiredProp || oldRequiredAttr;
@@ -368,7 +367,6 @@
         $(input).prop('required', false)
     }
     function enableRequired(input){
-        console.log('Enabled required', input);
         const oldRequiredProp = $(input).prop('old_required');
         const oldRequiredAttr = $(input).attr('old_required');
         const oldRequired = oldRequiredProp || oldRequiredAttr;
@@ -570,12 +568,17 @@
     function validateStep(stepId) {
         var inputs = [...document.querySelectorAll('#step' + stepId + ' input')];
         var retVal = true;
+        var focusInput = null;
         for(const input of inputs){
             const inputValid = input && input.checkValidity();
             retVal = retVal && inputValid;
             if(!inputValid){
                 console.log("Input not valid:", input);
+                focusInput = focusInput || input;
             }
+        }
+        if(focusInput && stepId == currentStep){
+            $(focusInput).focus();
         }
         if(retVal){
             document.getElementById('indicator' + stepId).classList.add('valid');
