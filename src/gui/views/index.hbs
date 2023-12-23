@@ -437,7 +437,7 @@
             $('input[name="story.reddit_refresh_token"]').removeClass('orange-border');
         }
     }
-    $('input[name="story.reddit_random_subreddits"]').flexdatalist({
+    $('input[name="story.reddit_random_subreddits"],input[name="story.reddit_random_ai_similarity"]').flexdatalist({
         data: [],
         searchDisabled: true,
         searchDelay: 0,
@@ -447,20 +447,7 @@
         multiple: true,
         toggleSelected: true,
     });
-    $('input[name="story.reddit_random_subreddits"]').click(function(event){
-        $(event.target.nextElementSibling).find('input').click()
-    });
-    $('input[name="story.reddit_random_ai_similarity"]').flexdatalist({
-        data: [],
-        searchDisabled: true,
-        searchDelay: 0,
-        minLength: 1,
-        selectionRequired: false,
-        noResultsText: 'Press enter to add "{keyword}"',
-        multiple: true,
-        toggleSelected: true,
-    });
-    $('input[name="story.reddit_random_ai_similarity"]').click(function(event){
+    $('input[name="story.reddit_random_subreddits"],input[name="story.reddit_random_ai_similarity"]').click(function(event){
         $(event.target.nextElementSibling).find('input').click()
     });
     function toggleRedditRandomConfigs(checkboxElement){
