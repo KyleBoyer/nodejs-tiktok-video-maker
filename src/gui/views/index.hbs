@@ -329,8 +329,11 @@
         $(input).attr('required', oldRequired || currentRequired);
         $(input).prop('required', oldRequired || currentRequired);
     }
+    var oldSSTitleState = true;
     function toggleAIRewrite(){
         if($('input[name="story.ai_rewrite"]').prop('checked')){
+            oldSSTitleState = $('input[name="story.reddit_screenshot_title"]').prop('checked');
+            $('input[name="story.reddit_screenshot_title"]').prop('checked', false);
             [...document.getElementById('openaiSharedConfigs').getElementsByTagName('input')].forEach(function(input){
                 enableRequired(input);
             });
@@ -342,6 +345,7 @@
             $('#openaiNewStorySection').hide();
             $('#aiSourceSection').slideDown('slow');
         }else{
+            $('input[name="story.reddit_screenshot_title"]').prop('checked', oldSSTitleState);
             [...document.getElementById('openaiSharedConfigs').getElementsByTagName('input')].forEach(function(input){
                 disableRequired(input);
             });
