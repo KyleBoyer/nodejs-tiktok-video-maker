@@ -256,16 +256,16 @@
                 <div id="openAISection">
                     <div id="openaiSharedConfigs">
                         <p><label style="display: block !important;">Open AI API Key:
-                            <input type="password" name="story.openai_api_key" placeholder="sk-">
+                            <input type="password" name="story.openai_api_key" placeholder="sk-" old_required="true">
                         </label></p>
                         <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Open AI API Base:
-                            <input type="text" name="story.openai_api_base" value="https://api.openai.com/v1">
+                            <input type="text" name="story.openai_api_base" value="https://api.openai.com/v1" old_required="true">
                         </label></p>
                         <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Open AI Model:
-                            <input type="text" name="story.openai_model" value="gpt-3.5-turbo-16k">
+                            <input type="text" name="story.openai_model" value="gpt-3.5-turbo-16k" old_required="true">
                         </label></p>
                         <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Open AI Retries:
-                            <input type="number" name="story.openai_retries" min="0" max="100" value="5" step="1" required>
+                            <input type="number" name="story.openai_retries" min="0" max="100" value="5" step="1"  old_required="true">
                         </label></p>
                     </div>
                     <div id="openaiRewriteSection">
@@ -274,18 +274,18 @@
                             <span class="slider round"></span>
                         </label></p>
                         <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Rewrite Split Section Tokens:
-                            <input type="number" name="story.openai_rewrite_chunk_max_tokens" min="25" value="1000" step="1" required>
+                            <input type="number" name="story.openai_rewrite_chunk_max_tokens" min="25" value="1000" step="1"  old_required="true">
                         </label></p>
                         <p><label style="display: block !important;">Rewrite Length Percentage:
-                            <input type="number" name="story.openai_rewrite_length" min="1" max="10000" value="100" step="1" required>
+                            <input type="number" name="story.openai_rewrite_length" min="1" max="10000" value="100" step="1"  old_required="true">
                         </label></p>
                     </div>
                     <div id="openaiNewStorySection" style="display: none;">
                         <p><label style="display: block !important;">Open AI New Story Prompt:
-                            <input type="text" name="story.openai_new_story_prompt" placeholder="Write a story about...">
+                            <input type="text" name="story.openai_new_story_prompt" placeholder="Write a story about..."  old_required="true">
                         </label></p>
                         <p><label style="display: block !important;">Open AI New Story Minimum Length Characters:
-                            <input type="number" name="story.openai_new_story_min_length" min="1" value="10" step="1" required>
+                            <input type="number" name="story.openai_new_story_min_length" min="1" value="10" step="1"  old_required="true">
                         </label></p>
                     </div>
                 </div>
@@ -307,13 +307,47 @@
     </form>
 </div>
 <script>
+    function disableRequired(input){
+        console.log('Disable required', input)
+        const oldRequiredProp = $(input).prop('required');
+        const oldRequiredAttr = $(input).attr('required');
+        const oldRequired = oldRequiredProp || oldRequiredAttr;
+        if(![null, undefined].includes(oldRequired)){
+            $(input).prop('old_required', oldRequired)
+        }
+        $(input).attr('required', false)
+        $(input).prop('required', false)
+    }
+    function enableRequired(input){
+        console.log('Enabled required', input);
+        const oldRequiredProp = $(input).prop('old_required');
+        const oldRequiredAttr = $(input).attr('old_required');
+        const oldRequired = oldRequiredProp || oldRequiredAttr;
+        const currentRequiredProp = $(input).prop('required');
+        const currentRequiredAttr = $(input).prop('required');
+        const currentRequired = currentRequiredProp || currentRequiredAttr;
+        $(input).attr('required', oldRequired || currentRequired);
+        $(input).prop('required', oldRequired || currentRequired);
+    }
     function toggleAIRewrite(){
         if($('input[name="story.ai_rewrite"]').prop('checked')){
+            [...document.getElementById('openaiSharedConfigs').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
+            [...document.getElementById('openaiRewriteSection').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
             $('#openAISection').show();
             $('#openaiRewriteSection').show();
             $('#openaiNewStorySection').hide();
             $('#aiSourceSection').slideDown('slow');
         }else{
+            [...document.getElementById('openaiSharedConfigs').getElementsByTagName('input')].forEach(function(input){
+                disableRequired(input);
+            });
+            [...document.getElementById('openaiRewriteSection').getElementsByTagName('input')].forEach(function(input){
+                disableRequired(input);
+            });
             $('#aiSourceSection').slideUp('slow');
             $('#openaiNewStorySection').show();
             $('#openaiRewriteSection').hide();
@@ -426,38 +460,42 @@
     }
     function showStorySourceSection(storySourceElement){
         if($(storySourceElement).val() == 'ai'){
-            const redditInputs = [...document.getElementById('redditSourceSection').getElementsByTagName('input')];
-            for(const redditInput of redditInputs){
-                const oldRequired = $(redditInput).prop('required');
-                if([true, false].includes(oldRequired)){
-                    $(redditInput).prop('old_required', oldRequired)
-                }
-                $(redditInput).prop('required', false)
-            }
-            const aiInputs = [...document.getElementById('aiSourceSection').getElementsByTagName('input')];
-            for(const aiInput of aiInputs){
-                const oldRequired = $(aiInput).prop('old_required');
-                const currentRequired = $(aiInput).prop('required');
-                $(aiInput).prop('required', oldRequired || currentRequired);
-            }
+            // disable reddit section required
+            [...document.getElementById('redditSourceSection').getElementsByTagName('input')].forEach(function(input){
+                disableRequired(input);
+            });
+            // disable ai rewrite section required
+            [...document.getElementById('openaiRewriteSection').getElementsByTagName('input')].forEach(function(input){
+                disableRequired(input);
+            });
+            // enable shared ai section required
+            [...document.getElementById('openaiSharedConfigs').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
+            // enable new story section required
+            [...document.getElementById('openaiNewStorySection').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
             $('#redditSourceSection').slideUp("slow");
             $('#openaiRewriteSection').hide();
             $('#openaiNewStorySection').show();
             $('#aiSourceSection').slideDown("slow");
         }else{
+            // disable ai new story section required
+            [...document.getElementById('openaiNewStorySection').getElementsByTagName('input')].forEach(function(input){
+                disableRequired(input);
+            });
+            // enable reddit section required
+            [...document.getElementById('redditSourceSection').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
             const aiInputs = [...document.getElementById('aiSourceSection').getElementsByTagName('input')];
             for(const aiInput of aiInputs){
-                const oldRequired = $(aiInput).prop('required');
-                if([true, false].includes(oldRequired)){
-                    $(aiInput).prop('old_required', oldRequired)
-                }
-                $(aiInput).prop('required', false)
+                disableRequired(aiInput);
             }
             const redditInputs = [...document.getElementById('redditSourceSection').getElementsByTagName('input')];
             for(const redditInput of redditInputs){
-                const oldRequired = $(redditInput).prop('old_required');
-                const currentRequired = $(redditInput).prop('required');
-                $(redditInput).prop('required', oldRequired || currentRequired);
+                enableRequired(redditInput);
             }
             $('#aiSourceSection').slideUp("slow");
             $('#openaiRewriteSection').show();
