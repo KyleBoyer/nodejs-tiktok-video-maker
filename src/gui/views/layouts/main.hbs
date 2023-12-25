@@ -11,7 +11,7 @@
         {{#foreach fonts}}
         @font-face {
             font-family: "{{ this }}";
-            src: url('fonts/{{ this }}.ttf') format('truetype');
+            src: local("{{ this }}"), url('fonts/{{ this }}.ttf') format('truetype');
         }
         {{/foreach}}
         body {
