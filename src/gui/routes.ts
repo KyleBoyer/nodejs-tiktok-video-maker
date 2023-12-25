@@ -25,7 +25,7 @@ app.set('view engine', '.hbs');
 app.set('views', join(__dirname, 'views'));
 
 app.use(express.static(join(__dirname, 'public')));
-app.use('fonts', express.static(fontsDir));
+app.use('/fonts', express.static(fontsDir));
 
 app.all(['/', '/index.html', 'index.htm'], (_req, res) => {
   const fonts =
