@@ -3,6 +3,8 @@ import { create } from 'express-handlebars';
 import { join, parse } from 'path';
 import { listFiles } from '../utils/fs';
 import { fontsDir } from '../utils/dirs';
+import { voices } from '../utils/tts';
+
 export const app = express();
 const hbs = create({
   extname: '.hbs',
@@ -32,5 +34,6 @@ app.all(['/', '/index.html', 'index.htm'], (_req, res) => {
         .map((ttfFile) => parse(ttfFile).name);
   res.render('index.hbs', {
     fonts,
+    voices,
   });
 });

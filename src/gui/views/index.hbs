@@ -337,6 +337,53 @@
         <!-- Step 5 -->
         <div class="step" id="step5" style="display: none;">
             <h2>Text to Speech Configs</h2>
+            <p><label style="display: block !important;">TTS Source:
+                <select name="tts.source" onchange="changeTTSSource()">
+                    <option value="google-translate" selected>Google Translate</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="openai">OpenAI</option>
+                </select>
+            </label></p>
+            <p id="ttsVoice" style="display: none;"><label style="display: block !important;">TTS Voice:
+                <select name="tts.voice">
+                </select>
+            </label></p>
+            <div id="tts-tiktok-source" style="display: none;">
+                <p><label style="display: block !important;">TikTok Session ID:
+                    <input type="password" name="tts.tiktok_session_id" old_required="true">
+                </label></p>
+            </div>
+            <div id="tts-openai-source" style="display: none;">
+                <p><label style="display: block !important;">Open AI API Key:
+                    <input type="password" name="tts.openai_api_key" placeholder="sk-" old_required="true">
+                </label></p>
+                <p class="advanced-options-step5" style="display:none;"><label style="display: block !important;">Open AI API Base:
+                    <input type="text" name="tts.openai_api_base" value="https://api.openai.com/v1" old_required="true">
+                </label></p>
+                <p class="advanced-options-step5" style="display:none;"><label style="display: block !important;">Open AI Model:
+                    <input type="text" name="tts.openai_model" value="tts-1" old_required="true">
+                </label></p>
+                <p class="advanced-options-step5" style="display:none;"><label style="display: block !important;">OpenAI TTS Requests Per Minute:
+                    <input type="number" name="tts.openai_tts_rpm" min="1" value="50" step="1" required>
+                </label></p>
+            </div>
+            
+            <p><label style="display: block !important;">TTS Speed Percentage:
+                <input type="number" name="tts.speed" min="1" max="10000" value="100" step="1" required>
+            </label></p>
+            <p><label style="display: block !important;">TTS Volume Percentage:
+                <input type="number" name="tts.volume" min="0" max="100" value="100" step="1" required>
+            </label></p>
+            <p class="advanced-options-step5" style="display:none;"><label style="vertical-align: text-top; height: 0; display: inline-block; margin-right: 5px;">Demux Concat:</label><label class="switch">
+                <input type="checkbox" name="tts.demux_concat" checked />
+                <span class="slider round"></span>
+            </label></p>
+            <p class="advanced-options-step5" style="display:none;"><label style="display: block !important;">TTS Speed Percentage:
+                <input type="number" name="tts.extra_silence" min="0" value="0.3" step="0.1" required>
+            </label></p>
+            <p>
+                <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step5')">Show advanced options</button>
+            </p>
             <button type="button" onclick="previousStep(4)">Previous</button>
             <button type="button" style="float: right;" onclick="nextStep(6)">Next</button>
         </div>
@@ -483,6 +530,52 @@
         const currentRequired = currentRequiredProp || currentRequiredAttr;
         $(input).attr('required', oldRequired || currentRequired);
         $(input).prop('required', oldRequired || currentRequired);
+    }
+    function changeTTSSource(){
+        const selectedSource = $('select[name="tts.source"]').val();
+        $('#tts-tiktok-source').hide();
+        [...document.getElementById('tts-tiktok-source').getElementsByTagName('input')].forEach(function(input){
+            disableRequired(input);
+        });
+        $('#tts-openai-source').hide();
+        [...document.getElementById('tts-openai-source').getElementsByTagName('input')].forEach(function(input){
+            disableRequired(input);
+        });
+        $('select[name="tts.voice"]').find('option').remove();
+        $('select[name="tts.voice"]').find('optgroup').remove();
+        if(selectedSource == 'tiktok'){
+            const allVoices = {{{stringify voices}}};
+            const tiktokVoices = allVoices.tiktok;
+            const { disneyVoices, engVoices, nonEngVoices, vocals } = tiktokVoices;
+            const defaultVoice = 'en_male_narration';
+            const disneyOptions = disneyVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
+            const engVoiceOptions = engVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
+            const nonEngVoiceOptions = nonEngVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
+            const vocalOptions = vocals.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
+            $('select[name="tts.voice"]').append(`<optgroup label="Disney Voices">${disneyOptions}</optgroup>`);
+            $('select[name="tts.voice"]').append(`<optgroup label="English Voices">${engVoiceOptions}</optgroup>`);
+            $('select[name="tts.voice"]').append(`<optgroup label="Non-English Voices">${nonEngVoiceOptions}</optgroup>`);
+            $('select[name="tts.voice"]').append(`<optgroup label="Vocals">${vocalOptions}</optgroup>`);
+            $('#ttsVoice').show();
+            [...document.getElementById('tts-tiktok-source').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
+            $('#tts-tiktok-source').show();
+        }else if(selectedSource == 'openai'){
+            const allVoices = {{{stringify voices}}};
+            const openaiVoices = allVoices.openai;
+            const defaultVoice = 'alloy';
+            for(const voice of openaiVoices){
+                $('select[name="tts.voice"]').append(`<option ${voice == defaultVoice ? 'selected' : ''}value="${voice}">${voice}</option>`);
+            }
+            $('#ttsVoice').show();
+            [...document.getElementById('tts-openai-source').getElementsByTagName('input')].forEach(function(input){
+                enableRequired(input);
+            });
+            $('#tts-openai-source').show();
+        }else if(selectedSource == 'google-translate'){
+            $('#ttsVoice').hide();
+        }
     }
     var oldSSTitleState = true;
     function toggleAIRewrite(){
