@@ -312,7 +312,18 @@
         <!-- Step 4 -->
         <div class="step" id="step4" style="display: none;">
             <h2>Story Replacements Config</h2>
-            
+            <h4>Text and Audio Replacements</h4>
+            <button type="button" onclick="addReplacementInputs('text-and-audio')">Add Replacement</button>
+            <div id="story-text-and-audio-replacements"></div>
+            <button id="remove-story-text-and-audio-replacement" type="button" style="display: none;" onclick="removeReplacementInputs('text-and-audio')">Remove Replacement</button>
+            <h4>Text-Only Replacements</h4>
+            <button type="button" onclick="addReplacementInputs('text-only')">Add Replacement</button>
+            <div id="story-text-only-replacements"></div>
+            <button id="remove-story-text-only-replacement" type="button" style="display: none;" onclick="removeReplacementInputs('text-only')">Remove Replacement</button>
+            <h4>Audio-Only Replacements</h4>
+            <button type="button" onclick="addReplacementInputs('audio-only')">Add Replacement</button>
+            <div id="story-audio-only-replacements"></div>
+            <button id="remove-story-audio-only-replacement" type="button" style="display: none;" onclick="removeReplacementInputs('audio-only')">Remove Replacement</button>
             <button type="button" onclick="previousStep(3)">Previous</button>
             <button type="button" style="float: right;" onclick="nextStep(5)">Next</button>
         </div>
@@ -388,6 +399,39 @@
     </form>
 </div>
 <script>
+    function addReplacementInputs(replacementType){
+        const removeButtonID = `remove-story-${replacementType}-replacement`;
+        const divToUpdateID = `story-${replacementType}-replacements`;
+        const newdiv = document.createElement( "div" );
+        newdiv.style = "border: 1px solid black; margin: 5px; padding: 5px; border-radius: 25px;";
+        const replaceThisLabel = document.createElement( "label" );
+        replaceThisLabel.textContent = 'Replace this:';
+        newdiv.appendChild(replaceThisLabel);
+        const replaceThisInput = document.createElement( "input" );
+        replaceThisInput.name = 'replacements.' + replacementType + '.rt[]'
+        replaceThisInput.type = 'text';
+        replaceThisInput.required = true;
+        newdiv.appendChild(replaceThisInput);
+        const replaceWithThisLabel = document.createElement( "label" );
+        replaceWithThisLabel.textContent = 'With this:';
+        newdiv.appendChild(replaceWithThisLabel);
+        const replaceWithThisInput = document.createElement( "input" );
+        replaceWithThisInput.name = 'replacements.' + replacementType + '.wt[]'
+        replaceWithThisInput.type = 'text';
+        replaceWithThisInput.required = true;
+        newdiv.appendChild(replaceWithThisInput);
+        $("#" + divToUpdateID).append(newdiv);
+        $('#' + removeButtonID).show();
+    }
+    function removeReplacementInputs(replacementType){
+        const removeButtonID = `remove-story-${replacementType}-replacement`;
+        const divToUpdateID = `story-${replacementType}-replacements`;
+        const divToUpdateInputs = [...document.getElementById(divToUpdateID).querySelectorAll('div')];
+        $(divToUpdateInputs.slice(-1)).remove();
+        if(divToUpdateInputs.length <= 1){
+            $('#' + removeButtonID).hide();
+        }
+    }
     function updateCaptionsFontInput(){
         const captionsFontInput = $('select[name="captions.font"]');
         captionsFontInput.css('font-family', captionsFontInput.val());
