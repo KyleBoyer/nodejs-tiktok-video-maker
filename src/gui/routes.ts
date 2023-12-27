@@ -4,6 +4,8 @@ import { join, parse } from 'path';
 import { listFiles } from '../utils/fs';
 import { fontsDir } from '../utils/dirs';
 import { voices } from '../utils/tts';
+import { validateConfig } from '../utils/config';
+import { generateVideo } from '../generator';
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const flattenPromise = dynamicImport('flat');
@@ -42,6 +44,19 @@ export function getRoutes(config = {}) {
       voices,
       config: flatten(config, { safe: true }),
     });
+  });
+
+  app.post('/generate', express.json(), (req, res) => {
+    let useConfig;
+    try {
+      useConfig = validateConfig(req.body);
+    } catch (err) {
+      res.status(400).json(err.errors);
+    }
+    if (useConfig) {
+      res.status(200).send('Generating...');
+      generateVideo(useConfig);
+    }
   });
   return app;
 }

@@ -63,7 +63,7 @@ const configSchema = object({
     output_format: string().oneOf(['mp4', 'webm']).default('mp4'),
   }),
   audio: audioSchema.when('video', {
-    is: (v: { accurate_render_method: boolean }) => !v.accurate_render_method,
+    is: (v: { accurate_render_method: boolean }) => !v?.accurate_render_method,
     then: (s) => s.shape({
       bitrate: number().oneOf([8, 16, 24, 32, 40, 48, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320]).default(320), // in 'kB/s'
     }),
@@ -104,7 +104,7 @@ const configSchema = object({
       if (ttsSpecificVoicesFlat.length) {
         newS = newS.oneOf(ttsSpecificVoicesFlat);
       }
-      if (ttsSpecificVoices.length == 1) {
+      if (ttsSpecificVoices?.length == 1) {
         newS = newS.default(ttsSpecificVoicesFlat[0]);
       }
       return newS;

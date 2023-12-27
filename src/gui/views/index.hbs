@@ -460,23 +460,23 @@
             const input = $(`input[name="${k}"], select[name="${k}"]`);
             if(input.length > 0){
                 if(percentageFields.includes(k)){
-                    $(input).val(v * 100);
+                    $(input).val(v * 100).change();
                 } else if(multiSelectFields.includes(k)){
-                    $(input).val(v.join(','));
+                    $(input).val(v.join(',')).change();
                 } else if (input.attr('type') == 'checkbox' || input.prop('type') == 'checkbox'){
-                    $(input).attr('checked', v);
-                    $(input).prop('checked', v);
+                    $(input).attr('checked', v).change();
+                    $(input).prop('checked', v).change();
                 }else{
-                    $(input).val(v);
+                    $(input).val(v).change();
                 }
             } else if(k.startsWith('replacements.')){
                 const replacementType = k.split('replacements.').pop().split('.').shift();
                 for(const [rt, wt] of v){
                     addReplacementInputs(replacementType);
                     const rtField = $(`input[name="replacements.${replacementType}.rt[]"]`).get().pop();
-                    $(rtField).val(rt);
+                    $(rtField).val(rt).change();
                     const wtField = $(`input[name="replacements.${replacementType}.wt[]"]`).get().pop();
-                    $(wtField).val(wt);
+                    $(wtField).val(wt).change();
                 }
             }
         }
@@ -544,7 +544,7 @@
         for(const formCheckbox of formCheckboxes){
             defaultSerialized[formCheckbox.name] = formCheckbox.checked;
         }
-        const numberInputs = [...$('form').find('input[type="number"]')];
+        const numberInputs = [...$('form').find('input[type="number"]'), ...$('select[name="audio.bitrate"]')];
         for(const numberInput of numberInputs){
             defaultSerialized[numberInput.name] = +numberInput.value;
         }
@@ -556,6 +556,13 @@
             _.set(finalConfig, k, v);
         }
         console.log(finalConfig);
+        $.ajax('/generate', {
+            data : JSON.stringify(finalConfig),
+            contentType : 'application/json',
+            type : 'POST',
+            success: console.log,
+            error: console.error,
+        });
     }
     function addReplacementInputs(replacementType){
         const removeButtonID = `remove-story-${replacementType}-replacement`;
