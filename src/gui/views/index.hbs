@@ -452,6 +452,36 @@
     </form>
 </div>
 <script>
+    const percentageFields = ['video.speed', 'video.volume', 'audio.speed', 'audio.volume', 'tts.speed', 'tts.volume', 'story.openai_rewrite_length'];
+    const multiSelectFields = ['story.reddit_random_subreddits', 'story.reddit_random_ai_similarity']
+    function loadConfig(){
+        const existingConfig = {{{stringify config}}};
+        for(const [k,v] of Object.entries(existingConfig)){
+            const input = $(`input[name="${k}"], select[name="${k}"]`);
+            if(input.length > 0){
+                if(percentageFields.includes(k)){
+                    $(input).val(v * 100);
+                } else if(multiSelectFields.includes(k)){
+                    $(input).val(v.join(','));
+                } else if (input.attr('type') == 'checkbox' || input.prop('type') == 'checkbox'){
+                    $(input).attr('checked', v);
+                    $(input).prop('checked', v);
+                }else{
+                    $(input).val(v);
+                }
+            } else if(k.startsWith('replacements.')){
+                const replacementType = k.split('replacements.').pop().split('.').shift();
+                for(const [rt, wt] of v){
+                    addReplacementInputs(replacementType);
+                    const rtField = $(`input[name="replacements.${replacementType}.rt[]"]`).get().pop();
+                    $(rtField).val(rt);
+                    const wtField = $(`input[name="replacements.${replacementType}.wt[]"]`).get().pop();
+                    $(wtField).val(wt);
+                }
+            }
+        }
+    }
+    loadConfig();
     function submitForm(){
         const steps = $('.step-indicator').length;
         var formValid = true;
@@ -518,7 +548,6 @@
         for(const numberInput of numberInputs){
             defaultSerialized[numberInput.name] = +numberInput.value;
         }
-        const percentageFields = ['video.speed', 'video.volume', 'audio.speed', 'audio.volume', 'tts.speed', 'tts.volume', 'story.openai_rewrite_length'];
         for(const percentageField of percentageFields){
             defaultSerialized[percentageField] = defaultSerialized[percentageField] / 100;
         }

@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { generateVideo } from './generator';
 import { startServer } from './gui';
 import { loadConfig } from './utils/config';
@@ -17,8 +18,13 @@ program
     .option('--ssl-key <file>', 'Private key to use with the SSL server')
     .option('--ssl-cert <file>', 'Public certificate to use with the SSL server')
     .option('--no-https-redirect', 'Disable the https redirection when running an SSL server')
+    .option('-c, --config <file>', 'JSON config file to pre-fill the form with')
     .action((options) => {
-      return startServer(options.port, options.ssl, options.httpsRedirect, options.sslKey, options.sslCert);
+      let config = {};
+      if (options.config) {
+        config = JSON.parse(readFileSync(options.config).toString());
+      }
+      return startServer(options.port, options.ssl, options.httpsRedirect, options.sslKey, options.sslCert, config);
     });
 
 program

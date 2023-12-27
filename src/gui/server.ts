@@ -1,4 +1,4 @@
-import { app } from './routes';
+import { getRoutes } from './routes';
 
 import { createServer as createHttpServer } from 'http';
 import { createServer as createHttpsServer } from 'https';
@@ -8,7 +8,8 @@ import selfsigned from 'selfsigned';
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const getPortPromise = dynamicImport('get-port');
 
-export async function startServer(port: number, ssl: boolean, httpsRedirect: boolean, sslKey: string, sslCert: string) {
+export async function startServer(port: number, ssl: boolean, httpsRedirect: boolean, sslKey: string, sslCert: string, config: unknown) {
+  const app = getRoutes(config);
   if (ssl) {
     let useSSLKey = sslKey;
     let useSSLCert = sslCert;
