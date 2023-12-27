@@ -211,7 +211,7 @@
                 </div>
                 <div id="redditRandomConfigs" style="display: none;">
                     <p><label style="display: block !important;">Reddit Random Subreddits:
-                        <input id="redditRandomStorySubreddits" type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;">
+                        <input type='text' placeholder='Subreddit Name' name='story.reddit_random_subreddits' style="margin-left: 0px !important; margin-right: 0px !important; margin-top: 0px !important; margin-bottom: 0px !important;">
                     </label></p>
                     <p class="advanced-options-step3" style="display:none;"><label style="display: block !important;">Reddit Random Posts Results Limit:
                         <input type="number" name="story.reddit_random_limit" min="1" value="50" step="1" required>
@@ -668,13 +668,13 @@
         if(checkboxElement.checked){
             $('input[name="story.reddit_post_id"]').prop('required', false);
             $('input[name="story.reddit_random_subreddits"]').prop('required', true);
-            $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', true);
+            // $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', true);
             $('#redditNotRandomConfigs').slideUp("slow");
             $('#redditRandomConfigs').slideDown("slow");
         }else{
             $('input[name="story.reddit_post_id"]').prop('required', true);
             $('input[name="story.reddit_random_subreddits"]').prop('required', false);
-            $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', false);
+            // $('input[name="story.reddit_random_subreddits"]').next().find('input').prop('required', false);
             $('#redditRandomConfigs').slideUp("slow");
             $('#redditNotRandomConfigs').slideDown("slow");
         }
@@ -777,6 +777,9 @@
                 console.log("Input not valid:", input);
                 focusInput = focusInput || input;
             }
+        }
+        if(focusInput && focusInput.classList.contains('flexdatalist')){
+            focusInput=$(focusInput).next().find('input')
         }
         if(focusInput && stepId == currentStep){
             $(focusInput).focus();
