@@ -32,7 +32,7 @@
         </div>
     </div>
 
-    <form id="multiStepForm">
+    <form id="multiStepForm" method="post">
         <!-- Step 1 -->
         <div class="step" id="step1">
             <h2>Video Configs</h2>
@@ -378,7 +378,7 @@
                 <input type="checkbox" name="tts.demux_concat" checked />
                 <span class="slider round"></span>
             </label></p>
-            <p class="advanced-options-step5" style="display:none;"><label style="display: block !important;">TTS Speed Percentage:
+            <p class="advanced-options-step5" style="display:none;"><label style="display: block !important;">TTS Extra Silence:
                 <input type="number" name="tts.extra_silence" min="0" value="0.3" step="0.1" required>
             </label></p>
             <p>
@@ -447,11 +447,83 @@
                 <span class="slider round"></span>
             </label></p>
             <button type="button" onclick="previousStep(6)">Previous</button>
-            <button type="submit" style="float: right;">Submit</button>
+            <button type="button" style="float: right;" onclick="submitForm()">Submit</button>
         </div>
     </form>
 </div>
 <script>
+    function submitForm(){
+        const steps = $('.step-indicator').length;
+        var formValid = true;
+        for(var step = 1; step <= steps; step++){
+            if(formValid){
+                const stepResult = validateStep(step);
+                if(!stepResult){ // if step is not valid
+                    showStep(step); // show that step
+                    validateStep(step); // refocus on issue input
+                }
+                formValid = stepResult;
+            }
+        }
+        if(!formValid){
+            return;
+        }
+        const formArraySerialized = $('form').serializeArray();
+        const defaultSerialized = Object.fromEntries(formArraySerialized.map(e=>[e.name, e.value]));
+        defaultSerialized['story.reddit_random_ai_similarity'] = defaultSerialized['story.reddit_random_ai_similarity'] ? defaultSerialized['story.reddit_random_ai_similarity'].split(',') : [];
+        defaultSerialized['story.reddit_random_subreddits'] = defaultSerialized['story.reddit_random_subreddits'] ? defaultSerialized['story.reddit_random_subreddits'].split(',') : [];
+        var textAndAudioReplacements = [];
+        var textOnlyReplacements = [];
+        var audioOnlyReplacements = [];
+        var textAndAudio_rt = null;
+        var textOnly_rt = null;
+        var audioOnly_rt = null;
+        for(const { name: k, value: v } of formArraySerialized){
+            if(k.startsWith('flexdatalist-')){
+                delete defaultSerialized[k];
+            }
+            if(k.startsWith('replacements.text-and-audio.rt')){
+                textAndAudio_rt = v;
+                delete defaultSerialized[k];
+            }else if(k.startsWith('replacements.text-only.rt')){
+                textOnly_rt = v;
+                delete defaultSerialized[k];
+            } else if(k.startsWith('replacements.audio-only.rt')){
+                audioOnly_rt = v;
+                delete defaultSerialized[k];
+            } else{
+                if(k.startsWith('replacements.text-and-audio.wt')){
+                    textAndAudioReplacements.push([textAndAudio_rt, v]);
+                    textAndAudio_rt = null;
+                    delete defaultSerialized[k];
+                }else if(k.startsWith('replacements.text-only.wt')){
+                    textOnlyReplacements.push([textOnly_rt, v]);
+                    textOnly_rt = null;
+                    delete defaultSerialized[k];
+                } else if(k.startsWith('replacements.audio-only.wt')){
+                    audioOnlyReplacements.push([audioOnly_rt, v]);
+                    audioOnly_rt = null;
+                    delete defaultSerialized[k];
+                }
+            }
+        }
+        defaultSerialized['replacements.text-and-audio'] = textAndAudioReplacements;
+        defaultSerialized['replacements.text-only'] = textOnlyReplacements;
+        defaultSerialized['replacements.audio-only'] = audioOnlyReplacements;
+        const formCheckboxes = [...$('form').find('input[type="checkbox"]')];
+        for(const formCheckbox of formCheckboxes){
+            defaultSerialized[formCheckbox.name] = formCheckbox.checked;
+        }
+        const numberInputs = [...$('form').find('input[type="number"]')];
+        for(const numberInput of numberInputs){
+            defaultSerialized[numberInput.name] = +numberInput.value;
+        }
+        const percentageFields = ['video.speed', 'video.volume', 'audio.speed', 'audio.volume', 'tts.speed', 'tts.volume', 'story.openai_rewrite_length'];
+        for(const percentageField of percentageFields){
+            defaultSerialized[percentageField] = defaultSerialized[percentageField] / 100;
+        }
+        console.log(defaultSerialized);
+    }
     function addReplacementInputs(replacementType){
         const removeButtonID = `remove-story-${replacementType}-replacement`;
         const divToUpdateID = `story-${replacementType}-replacements`;
