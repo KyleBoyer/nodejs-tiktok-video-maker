@@ -522,7 +522,11 @@
         for(const percentageField of percentageFields){
             defaultSerialized[percentageField] = defaultSerialized[percentageField] / 100;
         }
-        console.log(defaultSerialized);
+        const finalConfig = {};
+        for(const [k,v] of Object.entries(defaultSerialized)){
+            _.set(finalConfig, k, v);
+        }
+        console.log(finalConfig);
     }
     function addReplacementInputs(replacementType){
         const removeButtonID = `remove-story-${replacementType}-replacement`;
