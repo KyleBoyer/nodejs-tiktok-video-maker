@@ -1,4 +1,5 @@
 <div class="form-container">
+    <div id="terminal" style="display:none; width: 100%; height: 100%;"></div>
     <!-- Progress Step Bar -->
     <div class="progress-line-bar">
         <div class="progress-line"></div>
@@ -482,7 +483,7 @@
         }
     }
     loadConfig();
-    function submitForm(){
+    async function submitForm(){
         const steps = $('.step-indicator').length;
         var formValid = true;
         for(var step = 1; step <= steps; step++){
@@ -556,13 +557,34 @@
             _.set(finalConfig, k, v);
         }
         console.log(finalConfig);
-        $.ajax('/generate', {
-            data : JSON.stringify(finalConfig),
-            contentType : 'application/json',
-            type : 'POST',
-            success: console.log,
-            error: console.error,
+        $([...$('.form-container').children()].filter(e=>e.id != 'terminal')).hide();
+        const term = new Terminal({ disableStdIn: true });
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        $('#terminal').show();
+        term.open(document.getElementById('terminal'));
+        fitAddon.fit();
+        addEventListener("resize", () => fitAddon.fit());
+        const response = await fetch(`/generate?rows=${term.rows}&cols=${term.cols}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(finalConfig)
         });
+        const reader = response.body.getReader();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+            // Do something with last chunk of data then exit reader
+                break;
+            }
+            // Otherwise do something here to process current chunk
+            if(value){
+                term.write(value);
+            }
+        }
+        console.log('Request ended!');
     }
     function addReplacementInputs(replacementType){
         const removeButtonID = `remove-story-${replacementType}-replacement`;

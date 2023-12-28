@@ -1,3 +1,6 @@
+import { unlinkSync, writeFileSync } from 'fs';
+import { fileSync } from 'tmp';
+
 import express from 'express';
 import { create } from 'express-handlebars';
 import { join, parse } from 'path';
@@ -5,7 +8,8 @@ import { listFiles } from '../utils/fs';
 import { fontsDir } from '../utils/dirs';
 import { voices } from '../utils/tts';
 import { validateConfig } from '../utils/config';
-import { generateVideo } from '../generator';
+import * as pty from 'node-pty';
+// import { generateVideo } from '../generator';
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const flattenPromise = dynamicImport('flat');
@@ -32,6 +36,9 @@ export function getRoutes(config = {}) {
 
   app.use(express.static(join(__dirname, 'public')));
   app.use('/fonts', express.static(fontsDir));
+  app.get('/js/xterm.addon-fit.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-fit/lib/addon-fit.js')));
+  app.get('/js/xterm.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/lib/xterm.js')));
+  app.get('/css/xterm.css', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/css/xterm.css')));
 
   app.all(['/', '/index.html', 'index.htm'], async (_req, res) => {
     const { flatten } = await flattenPromise;
@@ -46,7 +53,7 @@ export function getRoutes(config = {}) {
     });
   });
 
-  app.post('/generate', express.json(), (req, res) => {
+  app.post('/generate', express.json(), async (req, res) => {
     let useConfig;
     try {
       useConfig = validateConfig(req.body);
@@ -54,8 +61,24 @@ export function getRoutes(config = {}) {
       res.status(400).json(err.errors);
     }
     if (useConfig) {
-      res.status(200).send('Generating...');
-      generateVideo(useConfig);
+      res.status(200);
+      const writeConfigFile = fileSync().name;
+      writeFileSync(writeConfigFile, JSON.stringify(useConfig));
+      const cmd = process.argv[0];
+      const args = [process.argv[1], 'generate', '-c', writeConfigFile];
+      res.write(`$ ${cmd} ${args.join(' ')}\r\n`);
+      const ptyProcess = pty.spawn(cmd, args, {
+        rows: req.query.rows ? +req.query.rows : undefined,
+        cols: req.query.cols ? +req.query.cols : undefined,
+        encoding: null,
+      });
+      ptyProcess.onData((data) => {
+        res.write(data);
+      });
+      ptyProcess.onExit(() => {
+        res.end();
+        unlinkSync(writeConfigFile);
+      });
     }
   });
   return app;
