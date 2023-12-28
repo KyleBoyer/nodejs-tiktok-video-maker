@@ -560,10 +560,28 @@
         $([...$('.form-container').children()].filter(e=>e.id != 'terminal')).hide();
         const term = new Terminal({ disableStdIn: true });
         const fitAddon = new FitAddon.FitAddon();
+        const weblinksAddon = new WebLinksAddon.WebLinksAddon(function(event, url) {
+            if(url == 'retry://'){
+                term.dispose();
+                submitForm();
+            } else if(url == 'edit://'){
+                term.dispose();
+                $([...$('.form-container').children()].filter(e=>e.id != 'terminal')).show();
+                $('#terminal').hide();
+            }else if (url.startsWith('file://')){
+                window.open(`/download/${url.split('://').pop().replace(/^\/|\/$/,'')}`, '_blank')
+            }else{
+                window.open(url, '_blank');
+            }
+        }, {
+            urlRegex: /((retry|edit):[/]{2})|(((https?)|file):[/]{2}[^\s"'!*(){}|\\\^<>`]*[^\s"':,.!?{}|\\\^~\[\]`()<>])/
+        });
         term.loadAddon(fitAddon);
+        term.loadAddon(weblinksAddon);
         $('#terminal').show();
         term.open(document.getElementById('terminal'));
         fitAddon.fit();
+        weblinksAddon.activate(term);
         addEventListener("resize", () => fitAddon.fit());
         const response = await fetch(`/generate?rows=${term.rows}&cols=${term.cols}`, {
             method: "POST",
@@ -572,18 +590,27 @@
             },
             body: JSON.stringify(finalConfig)
         });
-        const reader = response.body.getReader();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-            // Do something with last chunk of data then exit reader
-                break;
+        try{
+            const reader = response.body.getReader();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                // Do something with last chunk of data then exit reader
+                    break;
+                }
+                // Otherwise do something here to process current chunk
+                if(value){
+                    term.write(value);
+                }
             }
-            // Otherwise do something here to process current chunk
-            if(value){
-                term.write(value);
-            }
+        }catch(err){
+            lastWrite = null;
+            console.error(err);
+            term.write('\r\nGot error while generating: ' + err.message);
         }
+        term.write('\r\nClick here to retry://');
+        term.write('\r\nClick here to edit://');
+        term.write('\r\n');
         console.log('Request ended!');
     }
     function addReplacementInputs(replacementType){

@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "@xterm/addon-fit": "^0.9.0-beta.1",
+    "@xterm/addon-web-links": "^0.10.0-beta.1",
     "@xterm/xterm": "^5.4.0-beta.1",
     "axios": "^1.6.2",
     "bottleneck": "^2.19.5",

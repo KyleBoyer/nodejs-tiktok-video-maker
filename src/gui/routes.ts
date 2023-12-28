@@ -3,9 +3,9 @@ import { fileSync } from 'tmp';
 
 import express from 'express';
 import { create } from 'express-handlebars';
-import { join, parse } from 'path';
+import { basename, join, parse } from 'path';
 import { listFiles } from '../utils/fs';
-import { fontsDir } from '../utils/dirs';
+import { fontsDir, outputDir } from '../utils/dirs';
 import { voices } from '../utils/tts';
 import { validateConfig } from '../utils/config';
 import * as pty from 'node-pty';
@@ -36,7 +36,9 @@ export function getRoutes(config = {}) {
 
   app.use(express.static(join(__dirname, 'public')));
   app.use('/fonts', express.static(fontsDir));
+  app.use('/download', express.static(outputDir));
   app.get('/js/xterm.addon-fit.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-fit/lib/addon-fit.js')));
+  app.get('/js/xterm.addon-web-links.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js')));
   app.get('/js/xterm.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/lib/xterm.js')));
   app.get('/css/xterm.css', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/css/xterm.css')));
 
@@ -72,10 +74,15 @@ export function getRoutes(config = {}) {
         cols: req.query.cols ? +req.query.cols : undefined,
         encoding: null,
       });
+      let lastData: string | Buffer;
       ptyProcess.onData((data) => {
         res.write(data);
+        lastData = data;
       });
       ptyProcess.onExit(() => {
+        const finalFile = Buffer.from(lastData).toString().split('Video has been output to: ').pop().trim();
+        console.log(finalFile);
+        res.write(`Click here to download file:///${basename(finalFile)}`);
         res.end();
         unlinkSync(writeConfigFile);
       });
