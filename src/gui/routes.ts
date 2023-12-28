@@ -80,8 +80,7 @@ export function getRoutes(config = {}) {
         lastData = data;
       });
       ptyProcess.onExit(() => {
-        const finalFile = Buffer.from(lastData).toString().split('Video has been output to: ').pop().trim();
-        console.log(finalFile);
+        const finalFile = Buffer.from(lastData).toString().split('output to: ').pop().trim();
         res.write(`Click here to download file:///${basename(finalFile)}`);
         res.end();
         unlinkSync(writeConfigFile);
