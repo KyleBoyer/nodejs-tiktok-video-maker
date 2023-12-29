@@ -119,7 +119,7 @@
             <p>
                 <button type="button" onclick="toggleAdvancedOptions(this, 'advanced-options-step1')">Show advanced options</button>
             </p>
-            <button type="button" onclick="window.location.reload()">Reset Form</button>
+            <button type="button" onclick="resetForm()">Reset Form</button>
             <button type="button" style="float: right;" onclick="nextStep(2)">Next</button>
         </div>
 
@@ -453,10 +453,16 @@
     </form>
 </div>
 <script>
+    function resetForm(){
+        localStorage.removeItem('config');
+        window.location.reload();
+    }
     const percentageFields = ['video.speed', 'video.volume', 'audio.speed', 'audio.volume', 'tts.speed', 'tts.volume', 'story.openai_rewrite_length'];
     const multiSelectFields = ['story.reddit_random_subreddits', 'story.reddit_random_ai_similarity']
     function loadConfig(){
-        const existingConfig = {{{stringify config}}};
+        const serverConfig = {{{stringify config}}};
+        const localConfig = flatten(JSON.parse(localStorage.getItem('config') || '{}'), { safe: true });
+        const existingConfig = { ...serverConfig, ...localConfig };
         for(const [k,v] of Object.entries(existingConfig)){
             const input = $(`input[name="${k}"], select[name="${k}"]`);
             if(input.length > 0){
@@ -557,6 +563,7 @@
             _.set(finalConfig, k, v);
         }
         console.log(finalConfig);
+        localStorage.setItem('config', JSON.stringify(finalConfig));
         $([...$('.form-container').children()].filter(e=>e.id != 'terminal')).hide();
         const term = new Terminal({ disableStdIn: true });
         const fitAddon = new FitAddon.FitAddon();

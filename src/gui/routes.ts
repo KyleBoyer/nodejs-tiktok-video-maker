@@ -1,4 +1,4 @@
-import { unlinkSync, writeFileSync } from 'fs';
+import { readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { fileSync } from 'tmp';
 
 import express from 'express';
@@ -41,6 +41,12 @@ export function getRoutes(config = {}) {
   app.get('/js/xterm.addon-web-links.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js')));
   app.get('/js/xterm.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/lib/xterm.js')));
   app.get('/css/xterm.css', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/css/xterm.css')));
+  app.get('/js/flat.js', (_req, res) => {
+    const path = join(__dirname, '../../node_modules/flat/index.js');
+    const contents = readFileSync(path);
+    const updatedContents = contents.toString().split(/export /g).join('');
+    res.end(updatedContents);
+  });
 
   app.all(['/', '/index.html', 'index.htm'], async (_req, res) => {
     const { flatten } = await flattenPromise;
