@@ -9,7 +9,7 @@
     "postbuild": "npm run copy-files",
     "prestart": "npm install",
     "start": "node dist/index.js",
-    "copy-files": "copyfiles -u 1 src/**/*.hbs dist"
+    "copy-files": "copyfiles -u 1 src/**/*.hbs dist && copyfiles -u 1 src/gui/public/** dist"
   },
   "author": "Kyle Boyer",
   "license": "ISC",
