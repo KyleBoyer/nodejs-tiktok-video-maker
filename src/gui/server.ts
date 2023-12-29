@@ -14,7 +14,10 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
     let useSSLKey = sslKey;
     let useSSLCert = sslCert;
     if (!sslKey || !sslCert) {
-      const selfSignedResult = selfsigned.generate([{ name: 'commonName', value: 'localhost' }]);
+      const selfSignedResult = selfsigned.generate([{ name: 'commonName', value: 'localhost' }], {
+        keySize: 4096,
+        algorithm: 'sha256',
+      });
       useSSLKey = selfSignedResult.private;
       useSSLCert = selfSignedResult.cert + selfSignedResult.public;
     }
