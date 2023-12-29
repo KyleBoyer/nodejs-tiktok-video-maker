@@ -1,0 +1,7 @@
+{
+    "legacyWatch": true,
+    "watch": ["src/**"],
+    "ext": "ts, js, css, ejs, hbs",
+    "exec": "ts-node src/index.ts server -c config.json",
+    "ignore": ["node_modules/**", "dist/**", "package-lock.json"]
+}
