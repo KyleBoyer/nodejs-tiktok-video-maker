@@ -38,8 +38,9 @@
         <div class="step" id="step1">
             <h2>Video Configs</h2>
             <p><label style="display: block !important;">Background Video URL:
-                <input type="url" name="video.url" placeholder="https://www.youtube.com/watch?v=" pattern="https?://.*" required>
+                <input type="url" name="video.url" placeholder="https://www.youtube.com/watch?v=" pattern="https?://.*" onchange="showBackgroundVideo()" required>
             </label></p>
+            <div id="backgroundVideoDiv" style="display:none;text-align:center;"></div>
             <p><label style="display: block !important;">Background Video Speed Percentage:
                 <input type="number" name="video.speed" min="1" max="10000" value="100" step="1" required>
             </label></p>
@@ -127,8 +128,9 @@
         <div class="step" id="step2" style="display: none;">
             <h2>Audio Configs</h2>
             <p><label style="display: block !important;">Background Audio URL:
-                <input type="url" name="audio.url" placeholder="https://www.youtube.com/watch?v=" pattern="https?://.*" required>
+                <input type="url" name="audio.url" placeholder="https://www.youtube.com/watch?v=" pattern="https?://.*" onchange="showBackgroundAudio()" required>
             </label></p>
+            <div id="backgroundAudioDiv" style="display:none;text-align:center;"></div>
             <p><label style="display: block !important;">Background Audio Speed Percentage:
                 <input type="number" name="audio.speed" min="1" max="10000" value="100" step="1" required>
             </label></p>
@@ -207,8 +209,9 @@
                 </label></p>
                 <div id="redditNotRandomConfigs">
                     <p><label style="display: block !important;">Reddit Post ID:
-                        <input type="text" name="story.reddit_post_id" required>
+                        <input type="text" name="story.reddit_post_id" onchange="showRedditStory()" required>
                     </label></p>
+                    <div id="redditStoryDiv" style="display: none;"></div>
                 </div>
                 <div id="redditRandomConfigs" style="display: none;">
                     <p><label style="display: block !important;">Reddit Random Subreddits:
@@ -453,6 +456,72 @@
     </form>
 </div>
 <script>
+    async function showRedditStory(){
+        $('#redditStoryDiv').slideUp('slow');
+        const redditPostId = $('input[name="story.reddit_post_id"]').val();
+        try {
+            const redditResponse = await fetch(`/reddit?post_id=${redditPostId}`, {
+                method: 'GET',
+            });
+            const fullURL = (await redditResponse.json()).url;
+            console.log(fullURL);
+            document.getElementById('redditStoryDiv').innerHTML = `
+                <blockquote class="reddit-embed-bq" style="height:316px" data-embed-theme="dark" data-embed-height="8810">
+                    <a href="${fullURL}"/>
+                </blockquote>
+            `;
+            var head= document.getElementsByTagName('head')[0];
+            var script= document.createElement('script');
+            script.src= 'https://embed.reddit.com/widgets.js';
+            head.appendChild(script);
+            $('#redditStoryDiv').slideDown();
+        }catch(err){
+            $('#redditStoryDiv').slideUp('slow');
+        }
+    }
+    function getYoutubeVideoID(url){
+        let youtubeVideoID;
+        if(url.includes('?v=') || url.includes('&v=')){
+            // get
+            youtubeVideoID = new URL(url).searchParams.get('v');
+        } else if(url.includes('/v/')){
+            youtubeVideoID = url.split('/v/').pop().split('/').shift().split('?').shift();
+        } else if(url.includes('/e/')){
+            youtubeVideoID = url.split('/e/').pop().split('/').shift().split('?').shift();
+        } else if(url.includes('/embed/')){
+            youtubeVideoID = url.split('/embed/').pop().split('/').shift().split('?').shift();
+        } else if(url.includes('youtu.be/')){
+            youtubeVideoID = url.split('youtu.be/').pop().split('/').shift().split('?').shift();
+        } else if(url.includes('/attribution_link?')){
+            const attributionLink = 'https://youtube.com/' + new URL(url).searchParams.get('u');
+            youtubeVideoID = getYoutubeVideoID(attributionLink);
+        }
+        return youtubeVideoID;
+    }
+    function showBackgroundAudio(){
+        const chosenURL = $('input[name="audio.url"]').val();
+        const youtubeAudioID = getYoutubeVideoID(chosenURL);
+        if(youtubeAudioID){
+            document.getElementById('backgroundAudioDiv').innerHTML = `
+            <iframe width="960" height="540" onload="$('#backgroundAudioDiv').slideDown('slow');" src="https://www.youtube.com/embed/${youtubeAudioID}?playlist=${youtubeAudioID}&loop=1">
+            </iframe>
+            `;
+        }else{
+            $('#backgroundAudioDiv').slideUp('slow');
+        }
+    }
+    function showBackgroundVideo(){
+        const chosenURL = $('input[name="video.url"]').val();
+        const youtubeVideoID = getYoutubeVideoID(chosenURL);
+        if(youtubeVideoID){
+            document.getElementById('backgroundVideoDiv').innerHTML = `
+            <iframe width="960" height="540" onload="$('#backgroundVideoDiv').slideDown('slow');" src="https://www.youtube.com/embed/${youtubeVideoID}?playlist=${youtubeVideoID}&loop=1">
+            </iframe>
+            `;
+        }else{
+            $('#backgroundVideoDiv').slideUp('slow');
+        }
+    }
     function resetForm(){
         localStorage.removeItem('config');
         window.location.reload();

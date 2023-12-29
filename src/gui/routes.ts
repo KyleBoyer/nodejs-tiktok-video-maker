@@ -9,6 +9,7 @@ import { fontsDir, outputDir } from '../utils/dirs';
 import { voices } from '../utils/tts';
 import { validateConfig } from '../utils/config';
 import * as pty from 'node-pty';
+import axios from 'axios';
 // import { generateVideo } from '../generator';
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');
@@ -92,6 +93,17 @@ export function getRoutes(config = {}) {
         unlinkSync(writeConfigFile);
       });
     }
+  });
+  app.get('/reddit', (req, res)=>{
+    if (!req.query.post_id) {
+      return res.status(400).end();
+    }
+    axios(`https://reddit.com/${req.query.post_id}`).then((redditRes) => {
+      res.status(200).json({url: redditRes.request.res.responseUrl}).end();
+    }).catch((err)=>{
+      console.error(err);
+      res.status(500).end();
+    });
   });
   return app;
 }
