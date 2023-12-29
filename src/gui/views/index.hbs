@@ -488,7 +488,9 @@
             }
         }
     }
-    loadConfig();
+    $(document).ready(() => {
+        loadConfig();
+    });
     async function submitForm(){
         const steps = $('.step-indicator').length;
         var formValid = true;
