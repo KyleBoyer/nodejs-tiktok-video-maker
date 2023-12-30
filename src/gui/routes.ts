@@ -37,7 +37,7 @@ export function getRoutes(config = {}) {
 
   app.use(express.static(join(__dirname, 'public')));
   app.use('/fonts', express.static(fontsDir));
-  app.get('/view/:filename', (req, res) => {
+  app.get('/download/:filename', (req, res) => {
     const desiredFile = join(outputDir, req.params.filename);
     if (existsAndHasContent(desiredFile)) {
       res.status(200).download(desiredFile);
@@ -45,7 +45,7 @@ export function getRoutes(config = {}) {
       return res.status(404).end();
     }
   });
-  app.use('/download', express.static(outputDir));
+  app.use('/view', express.static(outputDir));
   app.get('/js/xterm.addon-fit.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-fit/lib/addon-fit.js')));
   app.get('/js/xterm.addon-web-links.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js')));
   app.get('/js/xterm.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/xterm/lib/xterm.js')));
