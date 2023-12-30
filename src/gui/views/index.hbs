@@ -646,13 +646,15 @@
                 term.dispose();
                 $([...$('.form-container').children()].filter(e=>e.id != 'terminal')).show();
                 $('#terminal').hide();
-            }else if (url.startsWith('file://')){
+            }else if (url.startsWith('download://')){
                 window.open(`/download/${url.split('://').pop().replace(/^\/|\/$/,'')}`, '_blank')
+            }else if (url.startsWith('view://')){
+                window.open(`/view/${url.split('://').pop().replace(/^\/|\/$/,'')}`, '_blank')
             }else{
                 window.open(url, '_blank');
             }
         }, {
-            urlRegex: /((retry|edit):[/]{2})|(((https?)|file):[/]{2}[^\s"'!*(){}|\\\^<>`]*[^\s"':,.!?{}|\\\^~\[\]`()<>])/
+            urlRegex: /((retry|edit):[/]{2})|(((https?)|download|view):[/]{2}[^\s"'!*(){}|\\\^<>`]*[^\s"':,.!?{}|\\\^~\[\]`()<>])/
         });
         term.loadAddon(fitAddon);
         term.loadAddon(weblinksAddon);

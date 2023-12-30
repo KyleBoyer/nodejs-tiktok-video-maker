@@ -4,7 +4,7 @@ import { fileSync } from 'tmp';
 import express from 'express';
 import { create } from 'express-handlebars';
 import { basename, join, parse } from 'path';
-import { listFiles } from '../utils/fs';
+import { existsAndHasContent, listFiles } from '../utils/fs';
 import { fontsDir, outputDir } from '../utils/dirs';
 import { voices } from '../utils/tts';
 import { validateConfig } from '../utils/config';
@@ -37,6 +37,14 @@ export function getRoutes(config = {}) {
 
   app.use(express.static(join(__dirname, 'public')));
   app.use('/fonts', express.static(fontsDir));
+  app.get('/view/:filename', (req, res) => {
+    const desiredFile = join(fontsDir, req.params.filename);
+    if (existsAndHasContent(desiredFile)) {
+      res.status(200).download(desiredFile);
+    } else {
+      return res.status(404).end();
+    }
+  });
   app.use('/download', express.static(outputDir));
   app.get('/js/xterm.addon-fit.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-fit/lib/addon-fit.js')));
   app.get('/js/xterm.addon-web-links.js', (_req, res) => res.sendFile(join(__dirname, '../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js')));
@@ -88,7 +96,8 @@ export function getRoutes(config = {}) {
       });
       ptyProcess.onExit(() => {
         const finalFile = Buffer.from(lastData).toString().split('output to: ').pop().trim();
-        res.write(`Click here to download file:///${basename(finalFile)}`);
+        res.write(`Click here to view:///${basename(finalFile)}`);
+        res.write(`\r\nClick here to download:///${basename(finalFile)}`);
         res.end();
         unlinkSync(writeConfigFile);
       });
