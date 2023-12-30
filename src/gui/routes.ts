@@ -38,7 +38,7 @@ export function getRoutes(config = {}) {
   app.use(express.static(join(__dirname, 'public')));
   app.use('/fonts', express.static(fontsDir));
   app.get('/view/:filename', (req, res) => {
-    const desiredFile = join(fontsDir, req.params.filename);
+    const desiredFile = join(outputDir, req.params.filename);
     if (existsAndHasContent(desiredFile)) {
       res.status(200).download(desiredFile);
     } else {
