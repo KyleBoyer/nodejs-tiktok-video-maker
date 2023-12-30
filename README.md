@@ -17,6 +17,7 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
 
 ### TODO
  - Web UI improvements
+   - Save step progress in localStorage
    - Server config file with certain fields hardcoded / not shown on the GUI
    - GUI "modes" for "admin" vs "customer"
      - Admin mode should allow advanced features like saving the updates config file on server side
