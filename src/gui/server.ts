@@ -8,6 +8,12 @@ import selfsigned from 'selfsigned';
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const getPortPromise = dynamicImport('get-port');
 
+function ignoreECONNRESET(err: { code?: string }) {
+  if (err.code != 'ECONNRESET') {
+    throw err;
+  }
+}
+
 export async function startServer(port: number, ssl: boolean, httpsRedirect: boolean, sslKey: string, sslCert: string, config: unknown) {
   const app = getRoutes(config);
   if (ssl) {
@@ -25,6 +31,7 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
       key: useSSLKey,
       cert: useSSLCert,
     }, app);
+    httpsServer.on('clientError', ignoreECONNRESET);
     if (httpsRedirect) {
       const { default: getPort } = await getPortPromise;
       const httpsPort = await getPort();
@@ -34,9 +41,11 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
         res.writeHead(301, { 'Location': `https://${host}${req.url}` });
         res.end();
       });
+      httpServer.on('clientError', ignoreECONNRESET);
       const httpPort = await getPort();
       await new Promise<void>((resolve) => httpServer.listen(httpPort, '0.0.0.0', () => resolve()));
       const netServer = createNetServer((socket) => {
+        socket.on('error', ignoreECONNRESET);
         socket.once('data', (data) => {
           socket.pause();
           socket.unshift(data);
@@ -47,6 +56,7 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
           process.nextTick(() => socket.resume());
         });
       });
+      netServer.on('error', ignoreECONNRESET);
       await new Promise<void>((resolve) => netServer.listen(port, '0.0.0.0', () => resolve()));
     } else {
       await new Promise<void>((resolve) => httpsServer.listen(port, '0.0.0.0', () => resolve()));
