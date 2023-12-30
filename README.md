@@ -16,8 +16,11 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
  - Run the main script `npm run start`
 
 ### TODO
- - Reddit random post similarity sort improvements (use NLP/AI)
- - Generate CONFIG.md explaining the settings (might be pointless if the web UI does this)
+ - Web UI improvements
+   - Server config file with certain fields hardcoded / not shown on the GUI
+   - GUI "modes" for "admin" vs "customer"
+     - Admin mode should allow advanced features like saving the updates config file on server side
+     - Client mode should restrict certain features / fields
  - More background video / audio sources instead of JUST YouTube (open an issue to suggest a source)
  - More TTS service options (open an issue to suggest a service)
  - More AI service options (open an issue to suggest a service)
@@ -31,5 +34,3 @@ I noticed some bugs and features that I wanted to add, and did contribute these 
    - grow / shrink
    - rotate
    - (open an issue to suggest other effects)
- - Web UI
- - Config file builder / helper (might be pointless if the web UI does this)
