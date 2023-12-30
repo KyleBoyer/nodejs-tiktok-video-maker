@@ -8,14 +8,18 @@ import selfsigned from 'selfsigned';
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 const getPortPromise = dynamicImport('get-port');
 
+const ignoredErrorCodes = ['ECONNABORTED', 'ECONNRESET', 'EPIPE'];
+
 function ignoreECONNRESET(err: { code?: string }) {
-  if (err.code != 'ECONNRESET') {
+  if (!ignoredErrorCodes.includes(err.code)) {
     throw err;
   }
 }
 
 export async function startServer(port: number, ssl: boolean, httpsRedirect: boolean, sslKey: string, sslCert: string, config: unknown) {
   const app = getRoutes(config);
+  // @ts-ignore-next-line
+  app.on('error', ignoreECONNRESET);
   if (ssl) {
     let useSSLKey = sslKey;
     let useSSLCert = sslCert;
