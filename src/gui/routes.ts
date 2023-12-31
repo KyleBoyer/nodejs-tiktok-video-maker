@@ -12,6 +12,9 @@ import * as pty from 'node-pty';
 import axios from 'axios';
 import { GoogleTranslateTTS } from '../utils/tts/google-translate';
 import { TikTokTTS } from '../utils/tts/tiktok';
+import { object, number, string } from 'yup';
+import { ImageGenerator } from '../utils/image';
+
 // import { generateVideo } from '../generator';
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');
@@ -115,6 +118,43 @@ export function getRoutes(config = {}) {
       console.error(err);
       res.status(500).end();
     });
+  });
+  app.post('/caption-sample', express.json(), (req, res) => {
+    const sampleSchema = object({
+      video: object({
+        width: number(),
+        height: number(),
+      }),
+      captions: object({
+        padding: object({
+          height: number().default(200),
+          between_lines: number().default(10),
+          width: number().default(200),
+        }),
+        background: string().default('rgba(0, 0, 0, 0)'),
+        color: string().default('white'),
+        stroke_color: string().default('black'),
+        stroke_width: number().default(5),
+        font: string().default('Roboto-Regular'),
+        font_size: number().default(50),
+      }),
+    });
+    let sampleConfig;
+    try {
+      sampleConfig = sampleSchema.validateSync(req.body, {
+        abortEarly: false,
+        stripUnknown: true,
+      });
+    } catch (err) {
+      res.status(400);
+      if (Array.isArray(err.errors) && err.errors.length > 0) {
+        res.send(err.errors.join('\n'));
+      }
+      return res.end();
+    }
+    const service = new ImageGenerator(sampleConfig);
+    const rendered = service.fromText('In a quaint village, an elderly woman found an ancient, glowing book in her attic.');
+    return res.status(200).json({ src: `data:image/png;base64,${rendered.toString('base64')}` }).end();
   });
   app.get('/tts-sample/:type/:voice?.mp3', async (req, res) => {
     if (!req.params.type) {
