@@ -352,6 +352,9 @@
                 <select name="tts.voice">
                 </select>
             </label></p>
+            <p id="ttsSample">
+                <button type="button" onclick="hearSampleTTS()">Hear Sample</button>
+            </p>
             <div id="tts-tiktok-source" style="display: none;">
                 <p><label style="display: block !important;">TikTok Session ID:
                     <input type="password" name="tts.tiktok_session_id" old_required="true">
@@ -456,6 +459,46 @@
     </form>
 </div>
 <script>
+    var audio = null;
+    function hearSampleTTS(){
+        const startSampleText = 'Start Sample';
+        const stopSampleText = 'Stop Sample';
+        const button = $('#ttsSample > button');
+        if(audio && button.text() == stopSampleText){
+            audio.pause();
+            button.text(startSampleText);
+        }else{
+            const type = $('select[name="tts.source"]').val();
+            const voice = $('select[name="tts.voice"]').val();
+            const serverSideRenderedURL = `/tts-sample/${type}${voice ? ('/' + voice) : ''}.mp3`;
+            const voiceSamples = {
+                'google-translate': serverSideRenderedURL,
+                openai: {
+                    alloy: 'https://cdn.openai.com/API/docs/audio/alloy.wav',
+                    echo: 'https://cdn.openai.com/API/docs/audio/echo.wav',
+                    fable: 'https://cdn.openai.com/API/docs/audio/fable.wav',
+                    onyx: 'https://cdn.openai.com/API/docs/audio/onyx.wav',
+                    nova: 'https://cdn.openai.com/API/docs/audio/nova.wav',
+                    shimmer: 'https://cdn.openai.com/API/docs/audio/shimmer.wav',
+                },
+                tiktok: {
+                    [voice]: serverSideRenderedURL,
+                }
+            };
+            const serviceSamples = voiceSamples[type];
+            const chosenSample = serviceSamples && (serviceSamples[voice] || serviceSamples);
+            if(!chosenSample){
+                alert(`Sample for "${type}"${voice ? (' voice "' + voice + '"') : ''} does not exist yet.`)
+            }else{
+                audio = new Audio(chosenSample);
+                button.text(stopSampleText);
+                audio.play();
+                audio.onended = function() {
+                    button.text(startSampleText);
+                };
+            }
+        }
+    }
     async function showRedditStory(){
         $('#redditStoryDiv').slideUp('slow');
         const redditPostId = $('input[name="story.reddit_post_id"]').val();
@@ -789,10 +832,27 @@
             const tiktokVoices = allVoices.tiktok;
             const { disneyVoices, engVoices, nonEngVoices, vocals } = tiktokVoices;
             const defaultVoice = 'en_male_narration';
-            const disneyOptions = disneyVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
-            const engVoiceOptions = engVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
-            const nonEngVoiceOptions = nonEngVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
-            const vocalOptions = vocals.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voice}</option>`)
+            const voiceNameMap = {
+                "es_mx_male_transformer": "Optimus Prime (Transformers)",
+                "en_us_ghostface": "Ghostface (Scream)",
+                "en_us_chewbacca": "Chewbacca (Star Wars)",
+                "en_us_c3po": "C3PO (Star Wars)",
+                "en_us_stitch": "Stitch (Lilo & Stitch)",
+                "en_us_stormtrooper": "Stormtrooper (Star Wars)",
+                "en_us_rocket": "Rocket (Guardians of the Galaxy)",
+                "en_female_f08_salut_damour": "Alto",
+                "en_male_m03_lobby": "Tenor",
+                "en_male_m03_sunshine_soon": "Sunshine Soon",
+                "en_female_f08_warmy_breeze": "Warmy Breeze",
+                "en_female_ht_f08_glorious": "Glorious",
+                "en_male_sing_funny_it_goes_up": "It Goes Up",
+                "en_male_m2_xhxs_m03_silly": "Chipmunk",
+                "en_female_ht_f08_wonderful_world": "Dramatic"
+            };
+            const disneyOptions = disneyVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voiceNameMap[voice] || voice}</option>`)
+            const engVoiceOptions = engVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voiceNameMap[voice] || voice}</option>`)
+            const nonEngVoiceOptions = nonEngVoices.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voiceNameMap[voice] || voice}</option>`)
+            const vocalOptions = vocals.map(voice => `<option ${voice == defaultVoice ? 'selected ' : ''}value="${voice}">${voiceNameMap[voice] || voice}</option>`)
             $('select[name="tts.voice"]').append(`<optgroup label="Disney Voices">${disneyOptions}</optgroup>`);
             $('select[name="tts.voice"]').append(`<optgroup label="English Voices">${engVoiceOptions}</optgroup>`);
             $('select[name="tts.voice"]').append(`<optgroup label="Non-English Voices">${nonEngVoiceOptions}</optgroup>`);

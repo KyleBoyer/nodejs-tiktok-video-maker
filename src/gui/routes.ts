@@ -10,6 +10,8 @@ import { voices } from '../utils/tts';
 import { validateConfig } from '../utils/config';
 import * as pty from 'node-pty';
 import axios from 'axios';
+import { GoogleTranslateTTS } from '../utils/tts/google-translate';
+import { TikTokTTS } from '../utils/tts/tiktok';
 // import { generateVideo } from '../generator';
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');
@@ -113,6 +115,38 @@ export function getRoutes(config = {}) {
       console.error(err);
       res.status(500).end();
     });
+  });
+  app.get('/tts-sample/:type/:voice?.mp3', async (req, res) => {
+    if (!req.params.type) {
+      return res.status(400).end();
+    }
+    const sampleConfig = {
+      audio: {
+        bitrate: 256,
+      },
+      tts: {
+        demux_concat: true,
+      },
+    };
+    if (req.params.type == 'google-translate') {
+      const service = new GoogleTranslateTTS(sampleConfig);
+      // eslint-disable-next-line max-len
+      const textToSpeak = 'In a quaint village, an elderly woman found an ancient, glowing book in her attic. Upon opening it, whimsical creatures of light emerged, bringing magic back to the village.';
+      const file = await service.generate(textToSpeak, null);
+      return res.status(200).end(file);
+    } else if (req.params.type == 'tiktok') {
+      const service = new TikTokTTS({
+        ...sampleConfig,
+        tts: {
+          ...sampleConfig.tts,
+          voice: req.params.voice,
+          tiktok_session_id: req.query.tiktok_session_id ? req.query.tiktok_session_id.toString() : undefined,
+        },
+      });
+      const textToSpeak = 'In a quaint village, an elderly woman found an ancient, glowing book in her attic. Upon opening it, whimsical creatures of light emerged, bringing magic back to the village.';
+      const file = await service.generate(textToSpeak, null);
+      return res.status(200).end(file);
+    }
   });
   return app;
 }

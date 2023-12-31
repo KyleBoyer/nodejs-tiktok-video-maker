@@ -111,7 +111,9 @@ export class OpenAIUtil {
       }
     }
     const rewrittenParts=[];
-    const rewordPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Rewriting story parts...', { total: MAX_RETRIES * partsSplitByTokens.length });
+    const rewordPB = MultiProgressBar ?
+      MultiProgressBar.newDefaultBarWithLabel('🤖 Rewriting story parts...', { total: MAX_RETRIES * partsSplitByTokens.length }) :
+      {update: () => {}, tick: () => {}};
     rewordPB.update(0);
     let partIndex = 0;
     for (const partList of partsSplitByTokens) {
@@ -168,7 +170,9 @@ export class OpenAIUtil {
     const joinedRewrittenPartsTokens = numTokensFromString(joinedRewrittenParts, modelName);
     let aiMessage='';
     let retryNum = 0;
-    const finalizeStoryPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Finalizing rewritten story...', { total: MAX_RETRIES });
+    const finalizeStoryPB = MultiProgressBar ?
+      MultiProgressBar.newDefaultBarWithLabel('🤖 Finalizing rewritten story...', { total: MAX_RETRIES }) :
+      {update: () => {}, tick: () => {}};
     finalizeStoryPB.update(0);
     while (retryNum <= MAX_RETRIES && numTokensFromString(aiMessage, modelName) < joinedRewrittenPartsTokens) {
       try {
@@ -216,7 +220,9 @@ export class OpenAIUtil {
     ];
     let createStoryAIMessage='';
     let createStoryRetryNum = 0;
-    const createStoryPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Generating new story...', { total: MAX_RETRIES });
+    const createStoryPB = MultiProgressBar ?
+      MultiProgressBar.newDefaultBarWithLabel('🤖 Generating new story...', { total: MAX_RETRIES }) :
+      {update: () => {}, tick: () => {}};
     createStoryPB.update(0);
     while (createStoryRetryNum <= MAX_RETRIES && createStoryAIMessage.length < desiredLength) {
       try {
@@ -254,7 +260,9 @@ export class OpenAIUtil {
     ];
     let titleStoryAIMessage='';
     let titleStoryRetryNum = 0;
-    const titleStoryPB = MultiProgressBar.newDefaultBarWithLabel('🤖 Generating new story title...', { total: MAX_RETRIES });
+    const titleStoryPB = MultiProgressBar ?
+      MultiProgressBar.newDefaultBarWithLabel('🤖 Generating new story title...', { total: MAX_RETRIES }) :
+      {update: () => {}, tick: () => {}};
     titleStoryPB.update(0);
     while (titleStoryRetryNum <= MAX_RETRIES && titleStoryAIMessage.length < 5) {
       try {

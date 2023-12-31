@@ -13,8 +13,10 @@ export function runAutoProgress(ffmpegCmd: ffmpeg.FfmpegCommand, MultiProgressBa
   return new Promise((resolve, reject) => {
     let cmd: string;
     const barStartTimer = setTimeout(() => {
-      bar = MultiProgressBar.newDefaultBarWithLabel(label);
-      bar.update(preBarProgress);
+      if (MultiProgressBar) {
+        bar = MultiProgressBar.newDefaultBarWithLabel(label);
+        bar.update(preBarProgress);
+      }
     }, appearAfter);
     ffmpegCmd
         .outputOptions([`-threads ${cpus().length}`, '-y'])
@@ -70,8 +72,10 @@ export async function getDuration(file: string, MultiProgressBar: MultiProgress,
     const decodeResult = await new Promise<number>((resolve, reject) => {
       const progressFile = fileSync().name;
       const barStartTimer = setTimeout(() => {
-        bar = MultiProgressBar.newDefaultBarWithLabel(progressLabel);
-        bar.update(preBarProgress);
+        if (MultiProgressBar) {
+          bar = MultiProgressBar.newDefaultBarWithLabel(progressLabel);
+          bar.update(preBarProgress);
+        }
       }, appearAfter);
       ffmpeg({ stdoutLines: 0 })
           .input(file)

@@ -158,11 +158,15 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
       story = await reddit.getPostInfo(config.story.reddit_post_id);
     } else if (config.story.reddit_random) {
       story = await reddit.getRandom();
-      sharedMultiProgress.terminate();
+      if (sharedMultiProgress) {
+        sharedMultiProgress.terminate();
+      }
       console.log(`🎲 Random story title: ${story.title}`);
       console.log(`🎲 Random story link: https://reddit.com/r/${story.subreddit}/comments/${story.id}`);
     } else {
-      sharedMultiProgress.terminate();
+      if (sharedMultiProgress) {
+        sharedMultiProgress.terminate();
+      }
       console.error('If you are using a story from Reddit, you must either supply a `post_id`, or turn `random` on in the config.');
       process.exit(1);
     }
@@ -175,7 +179,9 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
   story.content = await replacer.replace(story.content, config.replacements['text-and-audio']);
   story.title = await replacer.replace(story.title, config.replacements['text-and-audio']);
   const splits = await splitter.split(story.content.split(/\s+/).join(' '), config.captions.nlp_splitter);
-  const pb = sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) });
+  const pb = sharedMultiProgress ?
+    sharedMultiProgress.newDefaultBarWithLabel('💬 Generating captions and audio...', { total: (splits.length+1) }) :
+    {update: () => {}, tick: () => {}};
   pb.update(0);
   const generateCaptionAndAudio = async (text: string, overrideImage?: string) => {
     const hash = createHash('md5').update(configHash + text).digest('hex');
@@ -364,14 +370,20 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
   }
   const allDurations = videoParts.map((p)=>p.ttsDuration+config.tts.extra_silence);
   const calculatedTTSDuration = allDurations.reduce((partialSum, a) => partialSum + a, 0);
-  // sharedMultiProgress.terminate();
+  // if (sharedMultiProgress) {
+  //   sharedMultiProgress.terminate();
+  // }
   // console.log('Calculated duration from parts:',calculatedTTSDuration);
   const actualTTSDuration = await getDuration(config.video.accurate_render_method ? finalTTSVideoFile : finalTTSFile, sharedMultiProgress, true, '⏳ Calculating accurate TTS duration...');
   const totalDurationSeconds = config.video.accurate_render_method ? actualTTSDuration : Math.max(calculatedTTSDuration, actualTTSDuration);
-  // sharedMultiProgress.terminate();
+  // if (sharedMultiProgress) {
+  //   sharedMultiProgress.terminate();
+  // }
   // console.log('Actual duration from file:', actualTTSDuration);
   const ttsDurationCorrection = config.video.accurate_render_method ? 0 : ((actualTTSDuration - calculatedTTSDuration) / videoParts.length);
-  sharedMultiProgress.terminate();
+  if (sharedMultiProgress) {
+    sharedMultiProgress.terminate();
+  }
   console.log(`🎥 Video will be ${prettyMilliseconds(totalDurationSeconds * 1000, {verbose: true})} long!`);
   const useVideoFileDuration = await getDuration(useVideoFile, sharedMultiProgress);
   if (totalDurationSeconds > useVideoFileDuration) {
@@ -392,7 +404,9 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
       }
       useVideoFile = videoLoopedFile;
     } else {
-      sharedMultiProgress.terminate();
+      if (sharedMultiProgress) {
+        sharedMultiProgress.terminate();
+      }
       console.error('Background video is too short. Please enable looping or choose a different video.');
       process.exit(1);
     }
@@ -415,7 +429,9 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
       }
       useAudioFile = audioLoopedFile;
     } else {
-      sharedMultiProgress.terminate();
+      if (sharedMultiProgress) {
+        sharedMultiProgress.terminate();
+      }
       console.error('Background audio is too short. Please enable looping or choose a different audio.');
       process.exit(1);
     }
@@ -570,7 +586,9 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
       sharedMultiProgress,
       '🎥 Rendering final video...'
   );
-  sharedMultiProgress.terminate();
+  if (sharedMultiProgress) {
+    sharedMultiProgress.terminate();
+  }
   if (config.story.source == 'reddit') {
     RedditUtil.markComplete(story.id);
   } else if (config.story.source == 'ai') {
@@ -603,7 +621,9 @@ export async function generateVideo(config: ReturnType<typeof validateConfig>) {
   if (config.cleanup.captions) {
     rmSync(captionsDir, { recursive: true, force: true });
   }
-  sharedMultiProgress.terminate();
+  if (sharedMultiProgress) {
+    sharedMultiProgress.terminate();
+  }
   console.log(`Video has been output to: ${finalVideoFile}`);
 }
 if (require.main === module) {
