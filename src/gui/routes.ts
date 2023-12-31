@@ -162,10 +162,10 @@ export function getRoutes(config = {}) {
     }
     const sampleConfig = {
       audio: {
-        bitrate: 256,
+        bitrate: req.query.bitrate ? +req.query.bitrate : 256,
       },
       tts: {
-        demux_concat: true,
+        demux_concat: req.query.demux_concat ? (req.query.demux_concat.toString().toLowerCase() == 'true') : true,
       },
     };
     if (req.params.type == 'google-translate') {

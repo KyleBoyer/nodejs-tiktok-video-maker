@@ -534,7 +534,7 @@
         }else{
             const type = $('select[name="tts.source"]').val();
             const voice = $('select[name="tts.voice"]').val();
-            const serverSideRenderedURL = `/tts-sample/${type}${voice ? ('/' + voice) : ''}.mp3`;
+            const serverSideRenderedURL = `/tts-sample/${type}${voice ? ('/' + voice) : ''}.mp3?bitrate=${$('select[name="audio.bitrate"]').val()}&demux_concat=${$('input[name="tts.demux_concat"]').prop('checked')}`;
             const voiceSamples = {
                 'google-translate': serverSideRenderedURL,
                 openai: {
@@ -546,7 +546,7 @@
                     shimmer: 'https://cdn.openai.com/API/docs/audio/shimmer.wav',
                 },
                 tiktok: {
-                    [voice]: serverSideRenderedURL,
+                    [voice]: `${serverSideRenderedURL}&tiktok_session_id=${$('input[name="tts.tiktok_session_id"]').val()}`,
                 }
             };
             const serviceSamples = voiceSamples[type];
