@@ -453,7 +453,7 @@
             </label></p>
             <p>
                 <div style="text-align:center;">
-                    <img id="caption-sample" style="display: none; background: repeating-conic-gradient(#BFBFBF 0% 25%, transparent 0% 50%) 0% / 11px 11px; max-height: 200vh; max-width: 75vw;">
+                    <img id="caption-sample" style="display: none; background: repeating-conic-gradient(rgb(191, 191, 191) 0%, rgb(191, 191, 191) 25%, transparent 0%, transparent 50%) 0% top / 11px 11px; max-height: 200vh; max-width: 75vw;">
                 </div>
                 <button type="button" onclick="renderSampleCaption()">Render Sample</button>
             </p>
@@ -519,7 +519,7 @@
         const json = await response.json();
         $('#caption-sample').attr('src', json.src);
         const minWorH = Math.min(+$('[name="video.width"]').val(), +$('[name="video.height"]').val());
-        const transparentGridBackground = `repeating-conic-gradient(#BFBFBF 0% 25%, transparent 0% 50%) 0% / ${Math.ceil(minWorH / 100)}px ${Math.ceil(minWorH / 100)}px`
+        const transparentGridBackground = `repeating-conic-gradient(rgb(191, 191, 191) 0%, rgb(191, 191, 191) 25%, transparent 0%, transparent 50%) 0% top / ${Math.ceil(minWorH / 100)}px ${Math.ceil(minWorH / 100)}px`;
         $('#caption-sample').css('background', transparentGridBackground);
         $('#caption-sample').slideDown('slow');
     }
