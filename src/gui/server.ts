@@ -10,8 +10,8 @@ const getPortPromise = dynamicImport('get-port');
 
 const ignoredErrorCodes = ['ECONNABORTED', 'ECONNRESET', 'EPIPE'];
 
-function ignoreECONNRESET(err: { code?: string }) {
-  if (!ignoredErrorCodes.includes(err.code)) {
+function ignoreECONNRESET(err: Error & { code?: string }, otherwiseThrow = true) {
+  if (otherwiseThrow && !ignoredErrorCodes.includes(err.code)) {
     throw err;
   }
 }
@@ -35,7 +35,7 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
       key: useSSLKey,
       cert: useSSLCert,
     }, app);
-    httpsServer.on('clientError', ignoreECONNRESET);
+    httpsServer.on('clientError', (err) => ignoreECONNRESET(err, false));
     if (httpsRedirect) {
       const { default: getPort } = await getPortPromise;
       const httpsPort = await getPort();
@@ -45,7 +45,7 @@ export async function startServer(port: number, ssl: boolean, httpsRedirect: boo
         res.writeHead(301, { 'Location': `https://${host}${req.url}` });
         res.end();
       });
-      httpServer.on('clientError', ignoreECONNRESET);
+      httpServer.on('clientError', (err) => ignoreECONNRESET(err, false));
       const httpPort = await getPort();
       await new Promise<void>((resolve) => httpServer.listen(httpPort, '0.0.0.0', () => resolve()));
       const netServer = createNetServer((socket) => {
