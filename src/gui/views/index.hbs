@@ -353,7 +353,7 @@
                 </select>
             </label></p>
             <p id="ttsSample">
-                <button type="button" onclick="hearSampleTTS()">Hear Sample</button>
+                <button type="button" onclick="playSampleTTS()">Play Sample</button>
             </p>
             <div id="tts-tiktok-source" style="display: none;">
                 <p><label style="display: block !important;">TikTok Session ID:
@@ -524,8 +524,8 @@
         $('#caption-sample').slideDown('slow');
     }
     var audio = null;
-    function hearSampleTTS(){
-        const startSampleText = 'Start Sample';
+    function playSampleTTS(){
+        const startSampleText = 'Play Sample';
         const stopSampleText = 'Stop Sample';
         const button = $('#ttsSample > button');
         if(audio && button.text() == stopSampleText){
