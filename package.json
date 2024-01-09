@@ -31,6 +31,7 @@
     "express-handlebars": "^7.1.2",
     "flat": "^6.0.1",
     "fluent-ffmpeg": "^2.1.2",
+    "font-list": "^1.5.1",
     "get-port": "^7.0.0",
     "google-tts-api": "^2.0.2",
     "markdown-to-txt": "^2.0.1",

@@ -15,6 +15,8 @@ import { TikTokTTS } from '../utils/tts/tiktok';
 import { object, number, string } from 'yup';
 import { ImageGenerator } from '../utils/image';
 
+import fontList from 'font-list';
+
 // import { generateVideo } from '../generator';
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');
@@ -64,12 +66,13 @@ export function getRoutes(config = {}) {
 
   app.all(['/', '/index.html', 'index.htm'], async (_req, res) => {
     const { flatten } = await flattenPromise;
-    const fonts =
+    const customFonts =
       listFiles(fontsDir)
           .filter((f)=>f.toLowerCase().endsWith('.ttf'))
           .map((ttfFile) => parse(ttfFile).name);
+    const systemFonts = await fontList.getFonts({ disableQuoting: true });
     res.render('index.hbs', {
-      fonts,
+      fonts: [...systemFonts, ...customFonts],
       voices,
       config: flatten(config, { safe: true }),
     });
