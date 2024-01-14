@@ -99,7 +99,7 @@ export function getRoutes(config = {}) {
       });
       let lastData: string | Buffer;
       ptyProcess.onData((data) => {
-        process.stdout.write(data);
+        process.stdout.write(data.toString());
         res.write(data);
         lastData = data;
       });
