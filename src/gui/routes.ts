@@ -119,6 +119,7 @@ export function getRoutes(config = {}) {
       });
       processes[requestId].onExit((e) => {
         clearInterval(heartbeatInterval);
+        delete processes[requestId];
         if (e.exitCode !== 0 || e.signal !== 0) {
           console.log('Exit info:', e);
         }
