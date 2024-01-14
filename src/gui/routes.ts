@@ -99,10 +99,12 @@ export function getRoutes(config = {}) {
       });
       let lastData: string | Buffer;
       ptyProcess.onData((data) => {
+        console.log(data);
         res.write(data);
         lastData = data;
       });
-      ptyProcess.onExit(() => {
+      ptyProcess.onExit((e) => {
+        console.log('Exit info:', e);
         const finalFile = Buffer.from(lastData).toString().split('output to: ').pop().trim();
         res.write(`Click here to view:///${basename(finalFile)}`);
         res.write(`\r\nClick here to download:///${basename(finalFile)}`);
