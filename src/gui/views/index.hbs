@@ -793,6 +793,7 @@
                     break;
                 }
                 // Otherwise do something here to process current chunk
+                console.log(ab2str(value), value.toString(), value);
                 if(value && ab2str(value) != 'heartbeat' && value.toString() != 'heartbeat'){
                     term.write(value);
                 }

@@ -3,7 +3,7 @@ import { fileSync } from 'tmp';
 
 import express from 'express';
 import { create } from 'express-handlebars';
-import { basename, join, parse } from 'path';
+import { basename, join, parse, resolve } from 'path';
 import { existsAndHasContent, listFiles } from '../utils/fs';
 import { fontsDir, outputDir } from '../utils/dirs';
 import { voices } from '../utils/tts';
@@ -98,8 +98,16 @@ export function getRoutes(config = {}) {
       const requestId = Date.now().toString();
       res.setHeader('id', requestId);
       res.status(200);
-      const heartbeatInterval = setInterval(() => {
-        res.write('heartbeat');
+      const heartbeatInterval = setInterval(async () => {
+        await new Promise<void>((resolve, reject) =>
+          res._write('heartbeat', 'ascii', (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          })
+        );
       }, 1000);
       const writeConfigFile = fileSync().name;
       writeFileSync(writeConfigFile, JSON.stringify(useConfig));
