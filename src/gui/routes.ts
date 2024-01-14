@@ -77,7 +77,16 @@ export function getRoutes(config = {}) {
       config: flatten(config, { safe: true }),
     });
   });
-
+  const processes: { [key: string]: pty.IPty } = {};
+  app.get('/cancel', async (req, res) => {
+    const requestId = req.query.id?.toString();
+    if (!requestId || !processes[requestId]) {
+      res.status(400);
+    } else {
+      processes[requestId].kill('SIGINT');
+      res.status(200).end();
+    }
+  });
   app.post('/generate', express.json(), async (req, res) => {
     let useConfig;
     try {
@@ -86,6 +95,8 @@ export function getRoutes(config = {}) {
       res.status(400).json(err.errors);
     }
     if (useConfig) {
+      const requestId = Date.now().toString();
+      res.setHeader('id', requestId);
       res.status(200);
       const heartbeatInterval = setInterval(() => {
         res.write('heartbeat');
@@ -95,25 +106,27 @@ export function getRoutes(config = {}) {
       const cmd = process.argv[0];
       const args = [process.argv[1], 'generate', '-c', writeConfigFile];
       res.write(`$ ${cmd} ${args.join(' ')}\r\n`);
-      const ptyProcess = pty.spawn(cmd, args, {
+      processes[requestId] = pty.spawn(cmd, args, {
         rows: req.query.rows ? +req.query.rows : undefined,
         cols: req.query.cols ? +req.query.cols : undefined,
         encoding: null,
       });
       let lastData: string | Buffer;
-      ptyProcess.onData((data) => {
+      processes[requestId].onData((data) => {
         // process.stdout.write(data);
         res.write(data);
         lastData = data;
       });
-      ptyProcess.onExit((e) => {
+      processes[requestId].onExit((e) => {
         clearInterval(heartbeatInterval);
         if (e.exitCode !== 0 || e.signal !== 0) {
           console.log('Exit info:', e);
         }
-        const finalFile = Buffer.from(lastData).toString().split('output to: ').pop().trim();
-        res.write(`Click here to view:///${basename(finalFile)}`);
-        res.write(`\r\nClick here to download:///${basename(finalFile)}`);
+        if (lastData && lastData.toString().includes('output to: ')) {
+          const finalFile = Buffer.from(lastData).toString().split('output to: ').pop().trim();
+          res.write(`Click here to view:///${basename(finalFile)}`);
+          res.write(`\r\nClick here to download:///${basename(finalFile)}`);
+        }
         res.end();
         unlinkSync(writeConfigFile);
       });

@@ -777,6 +777,13 @@
             },
             body: JSON.stringify(finalConfig)
         });
+        const requestID = response.headers.get('id') || Date.now();
+        term.attachCustomKeyEventHandler((e) => {
+            if(e.type == 'keydown' && e.ctrlKey && e.key == 'c'){
+                fetch(`/cancel?id=${requestID}`);
+                term.write('^C');
+            }
+        });
         try{
             const reader = response.body.getReader();
             while (true) {
