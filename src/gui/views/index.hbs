@@ -664,6 +664,9 @@
             }
         }
     }
+    function ab2str(buf) {
+        return String.fromCharCode.apply(null, new Uint16Array(buf));
+    }
     async function submitForm(){
         const steps = $('.step-indicator').length;
         var formValid = true;
@@ -783,8 +786,8 @@
                     break;
                 }
                 // Otherwise do something here to process current chunk
-                console.log(value.toString(), value);
-                if(value && value.toString().trim() != 'heartbeat'){
+                console.log(ab2str(value), value.toString(), value);
+                if(value && ab2str(value) != 'heartbeat'){
                     term.write(value);
                 }
             }
