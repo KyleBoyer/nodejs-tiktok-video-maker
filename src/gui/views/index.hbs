@@ -571,7 +571,6 @@
                 method: 'GET',
             });
             const fullURL = (await redditResponse.json()).url;
-            console.log(fullURL);
             document.getElementById('redditStoryDiv').innerHTML = `
                 <blockquote class="reddit-embed-bq" style="height:316px" data-embed-theme="dark" data-embed-height="8810">
                     <a href="${fullURL}"/>
@@ -665,7 +664,7 @@
         }
     }
     function ab2str(buf) {
-        return String.fromCharCode.apply(null, new Uint16Array(buf));
+        return String.fromCharCode.apply(null, new Uint8Array(buf));
     }
     async function submitForm(){
         const steps = $('.step-indicator').length;
@@ -793,8 +792,14 @@
                     break;
                 }
                 // Otherwise do something here to process current chunk
-                console.log(ab2str(value), value.toString(), value);
-                if(value && ab2str(value) != 'heartbeat' && value.toString() != 'heartbeat'){
+                const heartbeatString = '\u200B';
+                if(
+                    value &&
+                    value != heartbeatString &&
+                    value.toString() != heartbeatString &&
+                    new TextDecoder("utf-8").decode(value) != heartbeatString &&
+                    ab2str(value) != heartbeatString
+                ){
                     term.write(value);
                 }
             }
