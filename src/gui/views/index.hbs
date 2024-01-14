@@ -783,7 +783,7 @@
                     break;
                 }
                 // Otherwise do something here to process current chunk
-                if(value){
+                if(value && value.trim() != 'heartbeat'){
                     term.write(value);
                 }
             }

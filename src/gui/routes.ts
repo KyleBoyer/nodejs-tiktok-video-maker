@@ -87,6 +87,9 @@ export function getRoutes(config = {}) {
     }
     if (useConfig) {
       res.status(200);
+      const heartbeatInterval = setInterval(() => {
+        res.write('heartbeat');
+      }, 1000);
       const writeConfigFile = fileSync().name;
       writeFileSync(writeConfigFile, JSON.stringify(useConfig));
       const cmd = process.argv[0];
@@ -104,6 +107,7 @@ export function getRoutes(config = {}) {
         lastData = data;
       });
       ptyProcess.onExit((e) => {
+        clearInterval(heartbeatInterval);
         if (e.exitCode !== 0 || e.signal !== 0) {
           console.log('Exit info:', e);
         }
